@@ -11,7 +11,7 @@ def status():
     """See general information of device (uptime, applications running, name)"""      
     payload = MachineManager.get_all_machines()     
        
-    return make_response({"status": payload}, 200)
+    return make_response(payload, 200)
   
 
 @machine_bp.route("/running-services/<int:id>", methods=["GET"])

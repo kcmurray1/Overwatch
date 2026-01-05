@@ -37,7 +37,7 @@ class MachineManager:
                 client.close()
                 machine_data.append(machine_info)  
 
-        return {'machines' : machine_data}
+        return {'data' : machine_data}
 
     @staticmethod
     def get_system_info(ssh_conn, os_handler : BaseOS):

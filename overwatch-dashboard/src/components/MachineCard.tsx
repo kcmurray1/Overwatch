@@ -1,4 +1,8 @@
-
+import { Button, Col, Row } from 'react-bootstrap';
+import Card from 'react-bootstrap/Card';
+import {FaWindows, FaLinux, FaDocker, FaPython} from "react-icons/fa"
+import {GrStatusUnknown} from "react-icons/gr"
+import { Navigate, useNavigate } from 'react-router-dom';
 
 export interface IMachine {
     id: number
@@ -12,12 +16,57 @@ export interface IMachine {
     manufacturer: string
     is_online: boolean
 }
+interface MachineCardProps {
+    machine : IMachine
+}
 
-export function MachineCard({address, os_type, user, cpu, port, model, manufacturer} : IMachine)
+const OS_LOGO_SIZE=50;
+const WATCHLIST_LOGO_SIZE = 40;
+
+export const MachineCard: React.FC<MachineCardProps> = ({machine}) =>
 {
+    const {address, os_type, user, cpu, port, model, manufacturer, is_online} = machine;
+    var os_logo = <GrStatusUnknown size={OS_LOGO_SIZE}/>
+    if(os_type == "windows")
+    {
+        os_logo = <FaWindows size={OS_LOGO_SIZE}/>
+    }
+    if(os_type == "linux")
+    {
+        os_logo = <FaLinux size={OS_LOGO_SIZE}/>
+    }
+
+    const card_border = is_online ? "success" : "danger";  
+    
+    //FIXME: look into action/loader
+    const navigate = useNavigate()
+
+    const handleCardClick = () => {
+       navigate(`/machine-details/${machine.id}`, {
+        state : {machine: machine}
+       });
+    }
+
     return (
-    <>
-    <p>{model} {manufacturer}, signed in as {user}@{address}:{port}</p>
-    </>
+    <Card border={card_border} className='border-3' onClick={handleCardClick}>
+        <Card.Header>
+            <Row>
+                <Col xs={10}>
+                {manufacturer} {model}
+                <Card.Subtitle>{user}@{address}:{port}</Card.Subtitle>
+                </Col>
+                <Col xs={2}>
+                {os_logo}
+                </Col>
+            </Row>
+        </Card.Header>
+        <Card.Body>
+            <Card.Text>{cpu}</Card.Text>
+            <h3>Watchlist Applications</h3>
+            {/* Display row of application icons and whether they are runnnig */}
+            <FaDocker size={WATCHLIST_LOGO_SIZE}/> <FaPython size={WATCHLIST_LOGO_SIZE}/>
+        </Card.Body>
+
+    </Card>
     )
 }

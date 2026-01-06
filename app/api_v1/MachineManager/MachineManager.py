@@ -28,11 +28,12 @@ class MachineManager:
         for machine in machines:
             try:
                 machine_info = MachineSchema().dump(machine)
-                client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=current_app.config["KEY_PATH"], timeout=5)
-                machine_info['is_online'] = True
+                # client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=current_app.config["KEY_PATH"], timeout=2)
+                # machine_info['is_online'] = True
                 #FIXME:check if applications in watchlist are running
             except:
-                machine_info['is_online'] = False
+                pass
+                # machine_info['is_online'] = False
             finally:
                 client.close()
                 machine_data.append(machine_info)  

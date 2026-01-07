@@ -34,6 +34,8 @@ class Machine(db.Model):
 
     manufacturer: Mapped[str] = mapped_column()
 
+    is_online: Mapped[bool] = mapped_column(default=False)
+
 
     def __repr__(self):
         return f"{self.user} running {self.os} address: {self.address}"

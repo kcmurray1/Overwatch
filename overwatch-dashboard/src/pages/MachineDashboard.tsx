@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Container, Row, Col} from 'react-bootstrap'
+import { Container, Row, Col, Button} from 'react-bootstrap'
 import { fetchData, type APIResponse } from '../FetchAPI'
 import { type IMachine, MachineCard } from '../components/MachineCard'
+import { ControlCard } from '../components/ControlsCard'
 
 export const MachineDashboard = () => {
   
@@ -11,7 +12,7 @@ export const MachineDashboard = () => {
   const[error, setError] = useState<string | null>(null);
 
   useEffect(()=>{
-    fetchData<APIResponse<IMachine[]>>('http://localhost:5000/api/v1/status-debug/10')
+    fetchData<APIResponse<IMachine[]>>('http://localhost:5000/api/v1/status-debug/5')
     .then((response) =>{
       const idk = response.data;
       console.log(idk);
@@ -28,8 +29,12 @@ export const MachineDashboard = () => {
   if (error) return <div>error: {error}</div>
 
   return (   
+    <>
     <Container fluid>
       <Row>
+       <Col md={4}>
+        <ControlCard/>  
+      </Col>
       {machines?.map((machine, key) => (
         <Col md={4} key={key}>
         <MachineCard machine={machine} />
@@ -39,5 +44,6 @@ export const MachineDashboard = () => {
       )}
       </Row>
     </Container>    
+    </>
   );
 }

@@ -1,5 +1,5 @@
 from flask import Blueprint, make_response, current_app, request
-from app.api_v1.MachineManager.MachineManager import MachineManager
+from app.machine_manager import MachineManager
 from app.api_v1.debug_info import generate_mock_machine
 machine_bp = Blueprint("/api/v1", __name__, url_prefix="/api/v1")
 
@@ -9,6 +9,9 @@ def status():
     payload = MachineManager.get_all_machines()     
        
     return make_response(payload, 200)
+
+
+
 
 @machine_bp.route("/status-debug/<int:count>", methods=["GET"])
 def status_debug(count):

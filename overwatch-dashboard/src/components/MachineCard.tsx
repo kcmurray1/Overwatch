@@ -1,8 +1,8 @@
-import { Button, Col, Row } from 'react-bootstrap';
+import { Col, Row } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
 import {FaWindows, FaLinux, FaDocker, FaPython} from "react-icons/fa"
 import {GrStatusUnknown} from "react-icons/gr"
-import { Navigate, useNavigate } from 'react-router-dom';
+import {useNavigate } from 'react-router-dom';
 
 export interface IMachine {
     id: number
@@ -38,7 +38,6 @@ export const MachineCard: React.FC<MachineCardProps> = ({machine}) =>
 
     const card_border = is_online ? "success" : "danger";  
     
-    //FIXME: look into action/loader
     const navigate = useNavigate()
 
     const handleCardClick = () => {

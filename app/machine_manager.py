@@ -4,9 +4,11 @@ from sqlalchemy import Select
 from flask import current_app
 from app.models import db, Machine
 from app.serializer import MachineSchema
-from app.api_v1.os_platforms.windows import WindowsOS
-from app.api_v1.os_platforms.linux import LinuxOS
-from app.api_v1.os_platforms.base import BaseOS
+from app.os_platforms.windows import WindowsOS
+from app.os_platforms.linux import LinuxOS
+from app.os_platforms.base import BaseOS
+
+
 
 OS_HANDLERS = {
         "windows" : WindowsOS(),
@@ -14,31 +16,32 @@ OS_HANDLERS = {
 }
 
 class MachineManager:
-   
+
     @staticmethod
     def get_all_machines():
         """Return system information for all machines"""
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        # client = paramiko.SSHClient()
+        # client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         
         machines = db.session.execute(Select(Machine)).scalars()
         
-        machine_data = list()
+        
+        # machine_data = list()
 
-        for machine in machines:
-            try:
-                machine_info = MachineSchema().dump(machine)
-                # client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=current_app.config["KEY_PATH"], timeout=2)
-                # machine_info['is_online'] = True
-                #FIXME:check if applications in watchlist are running
-            except:
-                pass
-                # machine_info['is_online'] = False
-            finally:
-                client.close()
-                machine_data.append(machine_info)  
+        
+        # for machine in machines:
+        #     try:
+        #         machine_info = MachineSchema().dump(machine)
+        #         client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=current_app.config["KEY_PATH"], timeout=1)
+        #         machine_info['is_online'] = True
+        #         #FIXME:check if applications in watchlist are running
+        #     except:
+        #         machine_info['is_online'] = False
+        #     finally:
+        #         client.close()
+        #         machine_data.append(machine_info)  
 
-        return {'data' : machine_data}
+        return {'data' : MachineSchema(many=True).dump(machines)}
 
     @staticmethod
     def get_system_info(ssh_conn, os_handler : BaseOS):

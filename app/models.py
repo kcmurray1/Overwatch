@@ -15,8 +15,6 @@ class Machine(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
-    # name: Mapped[str] = mapped_column()
-
     address: Mapped[str] = mapped_column()
 
     #NOTE: convert to enumerator

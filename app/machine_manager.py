@@ -1,13 +1,13 @@
 import paramiko
 import json
-from sqlalchemy import Select
+from sqlalchemy import select
 from flask import current_app
 from app.models import db, Machine
 from app.serializer import MachineSchema
 from app.os_platforms.windows import WindowsOS
 from app.os_platforms.linux import LinuxOS
 from app.os_platforms.base import BaseOS
-
+from app.errors import MachineConnectionError, UnsupportedMachineOS
 
 
 OS_HANDLERS = {
@@ -16,31 +16,29 @@ OS_HANDLERS = {
 }
 
 class MachineManager:
+    @staticmethod
+    def check_connections(app):
+        """Check what machines are online/offline then updates database"""
+        with app.app_context():
+            machines = db.session.execute(select(Machine)).scalars()
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            # attempt to connect to each machine
+            for machine in machines:
+                try:
+                    client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=app.config["KEY_PATH"], timeout=5)
+                    machine.is_online = True
+                except:
+                    machine.is_online = False
+                finally:
+                    db.session.commit()
+                    client.close()
 
     @staticmethod
     def get_all_machines():
-        """Return system information for all machines"""
-        # client = paramiko.SSHClient()
-        # client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        """Return system information for all machines"""     
+        machines = db.session.execute(select(Machine)).scalars()
         
-        machines = db.session.execute(Select(Machine)).scalars()
-        
-        
-        # machine_data = list()
-
-        
-        # for machine in machines:
-        #     try:
-        #         machine_info = MachineSchema().dump(machine)
-        #         client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=current_app.config["KEY_PATH"], timeout=1)
-        #         machine_info['is_online'] = True
-        #         #FIXME:check if applications in watchlist are running
-        #     except:
-        #         machine_info['is_online'] = False
-        #     finally:
-        #         client.close()
-        #         machine_data.append(machine_info)  
-
         return {'data' : MachineSchema(many=True).dump(machines)}
 
     @staticmethod
@@ -60,6 +58,7 @@ class MachineManager:
         if stdout.channel.recv_exit_status() == 0:
             return "linux"
         
+        # machine is not using supported OS
         return None
     
     @staticmethod 
@@ -76,7 +75,7 @@ class MachineManager:
             os_type = MachineManager.detect_os(client)
 
             if not os_type:
-                return NotImplementedError
+                raise UnsupportedMachineOS
             
             os_handler = OS_HANDLERS.get(os_type)
 
@@ -91,23 +90,19 @@ class MachineManager:
             
             db.session.add(new_machine)
             db.session.commit()
-            client.close()
             return sys_info
-        except Exception as e:
-            print(f"Error adding machine {str(e)}")
-            return e
+        except TimeoutError:
+            raise MachineConnectionError
+        finally:
+            client.close() 
 
-
-   
-        
-
-    def get_running_services(machine_id, offset=None):
+    def get_running_services(machine_id, keypath, offset=None):
         # return machine info + running apps
 
         machine = db.session.execute(Select(Machine).where(Machine.id== machine_id)).scalar_one_or_none()
         ssh_conn = paramiko.SSHClient()
         ssh_conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_conn.connect(machine.address, port=machine.port,  username=machine.user, key_filename=current_app.config["KEY_PATH"])
+        ssh_conn.connect(machine.address, port=machine.port,  username=machine.user, key_filename=keypath)
         def runner(cmd):
             return MachineManager._execute(ssh_conn, cmd)
         

@@ -1,6 +1,7 @@
 from flask import Blueprint, make_response, current_app, request
 from app.machine_manager import MachineManager
 from app.api_v1.debug_info import generate_mock_machine
+from app.errors import APIError
 machine_bp = Blueprint("/api/v1", __name__, url_prefix="/api/v1")
 
 @machine_bp.route("/status", methods=["GET"])
@@ -9,9 +10,6 @@ def status():
     payload = MachineManager.get_all_machines()     
        
     return make_response(payload, 200)
-
-
-
 
 @machine_bp.route("/status-debug/<int:count>", methods=["GET"])
 def status_debug(count):
@@ -26,17 +24,17 @@ def running_services(id):
 
     return make_response({"result": services}, 200)
 
-# add a machine
 @machine_bp.route("/add-machine", methods=["POST"])
 def add_machine():
-
     data = request.get_json()
-
-    machine_addr = data["addr"]
-    machine_port = data["port"]
-    machine_user = data["user"]
+    print("adding machine", data)
+    try:
+        machine_addr = data["address"]
+        machine_port = data["port"]
+        machine_user = data["username"]
+    except KeyError:
+        raise APIError("Invalid Machine details")
     new_machine = MachineManager.add_machine(machine_addr, machine_port, machine_user, current_app.config["KEY_PATH"])
-    
     return make_response({"created": new_machine}, 201)
 
 

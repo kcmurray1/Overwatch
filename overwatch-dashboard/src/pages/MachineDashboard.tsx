@@ -3,7 +3,6 @@ import { Container, Row, Col, Button} from 'react-bootstrap'
 import { fetchData, type APIResponse } from '../FetchAPI'
 import { type IMachine, MachineCard } from '../components/MachineCard'
 import { ControlCard } from '../components/ControlsCard'
-
 export const MachineDashboard = () => {
   
   // Get machines from backend
@@ -12,17 +11,38 @@ export const MachineDashboard = () => {
   const[error, setError] = useState<string | null>(null);
 
   useEffect(()=>{
-    fetchData<APIResponse<IMachine[]>>('http://localhost:5000/api/v1/status-debug/5')
-    .then((response) =>{
-      const idk = response.data;
-      console.log(idk);
-      setMachines(idk);
-      setLoading(false);
-    })
-    .catch((err) =>{
-      setError((err as Error).message);
-      setLoading(false);
-    })
+   const loadData = () => {
+    fetchData<APIResponse<IMachine[]>>('http://127.0.0.1:5000/api/v1/status')
+      .then((response) => {
+        setMachines(response.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError((err as Error).message);
+        setLoading(false);
+      });
+    };
+    
+    loadData();
+
+    const intervalId = setInterval(loadData, 10000);
+
+    return () => clearInterval(intervalId);
+
+   
+   
+    //   fetchData<APIResponse<IMachine[]>>('http://localhost:5000/api/v1/status')
+    // .then((response) =>{
+    //   const idk = response.data;
+    //   console.log(idk);
+    //   setMachines(idk);
+    //   setLoading(false);
+    // })
+    // .catch((err) =>{
+    //   setError((err as Error).message);
+    //   setLoading(false);
+    // });
+
   }, [])
 
   if (loading) return <div>loading..</div>

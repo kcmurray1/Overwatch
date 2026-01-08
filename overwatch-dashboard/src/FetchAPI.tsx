@@ -1,5 +1,6 @@
 export interface APIResponse<T> {
     data: T | null;
+    message: string;
 }
 
 export async function fetchData<T>(url : string) : Promise<T>
@@ -24,11 +25,13 @@ export async function PostData<T>(url : string, data : any) : Promise<T>
             body: JSON.stringify(data)
         }
     )
+
+    const result = await res.json();
     
     if(!res.ok)
     {
-        throw new Error("There was a POST error" + url);
+        throw new Error(result.message);
     }
 
-    return (await res.json()) as T
+    return (result) as T
 }

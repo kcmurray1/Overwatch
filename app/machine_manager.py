@@ -1,14 +1,15 @@
 import paramiko
 import json
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from flask import current_app
 from app.models import db, Machine
 from app.serializer import MachineSchema
-from app.os_platforms.windows import WindowsOS
-from app.os_platforms.linux import LinuxOS
-from app.os_platforms.base import BaseOS
-from app.errors import MachineConnectionError, UnsupportedMachineOS
-
+from app.core.os_platforms.windows import WindowsOS
+from app.core.os_platforms.linux import LinuxOS
+from app.core.os_platforms.base import BaseOS
+from app.core.errors import MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists
+from app.features.vscode.command import launch_vscode
+import subprocess
 
 OS_HANDLERS = {
         "windows" : WindowsOS(),
@@ -25,6 +26,7 @@ class MachineManager:
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             # attempt to connect to each machine
             for machine in machines:
+                print("attempting connection to", machine.address)
                 try:
                     client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=app.config["KEY_PATH"], timeout=5)
                     machine.is_online = True
@@ -39,7 +41,7 @@ class MachineManager:
         """Return system information for all machines"""     
         machines = db.session.execute(select(Machine)).scalars()
         
-        return {'data' : MachineSchema(many=True).dump(machines)}
+        return MachineSchema(many=True).dump(machines)
 
     @staticmethod
     def get_system_info(ssh_conn, os_handler : BaseOS):
@@ -63,6 +65,10 @@ class MachineManager:
     
     @staticmethod 
     def add_machine(address, port, username, keypath):
+        # check if machine with address and port already exists
+        machine = db.session.execute(select(Machine).where(Machine.address == address and Machine.port == port)).scalar_one_or_none()
+        if machine:
+            raise MachineAlreadyExists
         try:
         
             client = paramiko.SSHClient()
@@ -95,11 +101,16 @@ class MachineManager:
             raise MachineConnectionError
         finally:
             client.close() 
+    @staticmethod
+    def remove_machine(machine_id):
+        db.session.execute(delete(Machine).where(Machine.id == machine_id))
+        db.session.commit()
 
+    @staticmethod
     def get_running_services(machine_id, keypath, offset=None):
         # return machine info + running apps
 
-        machine = db.session.execute(Select(Machine).where(Machine.id== machine_id)).scalar_one_or_none()
+        machine = db.session.execute(select(Machine).where(Machine.id== machine_id)).scalar_one_or_none()
         ssh_conn = paramiko.SSHClient()
         ssh_conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh_conn.connect(machine.address, port=machine.port,  username=machine.user, key_filename=keypath)
@@ -125,5 +136,16 @@ class MachineManager:
             print("execute error!")
             return stderr.read().decode().strip()
         return stdout.read().decode().strip()
+    
+    @staticmethod
+    def open_vscode(machine_id):
+        """open vscode on the client machine connected to the targeted machine"""
+        machine = db.session.execute(select(Machine).where(Machine.id == machine_id)).scalar_one_or_none()
+
+        return launch_vscode(machine.user, machine.address, machine.user, machine.os_type)
+    
+
+        
+
 
 

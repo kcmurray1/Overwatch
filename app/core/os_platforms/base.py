@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class BaseOS(ABC):
-    """Base class for that subclass operating systems must implement basic functionality"""
+    """Base class functionality that subclass operating systems must support"""
     COMMANDS = {
         "SYS_INFO",
         "PROCESSES",

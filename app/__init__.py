@@ -13,7 +13,7 @@ def create_app():
     app = Flask(__name__)
 
     from .api_v1.views.machine import machine_bp
-    from app.errors import (unexpected_error, machine_error, MachineError)
+    from app.core.errors import (unexpected_error, machine_error, MachineError)
     app.register_blueprint(machine_bp)
     app.register_error_handler(Exception, unexpected_error)
     app.register_error_handler(MachineError, machine_error)

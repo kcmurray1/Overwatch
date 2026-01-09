@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Container, Row, Col, Button} from 'react-bootstrap'
+import { Container, Row, Col} from 'react-bootstrap'
 import { fetchData, type APIResponse } from '../FetchAPI'
 import { type IMachine, MachineCard } from '../components/MachineCard'
 import { ControlCard } from '../components/ControlsCard'
@@ -28,21 +28,6 @@ export const MachineDashboard = () => {
     const intervalId = setInterval(loadData, 10000);
 
     return () => clearInterval(intervalId);
-
-   
-   
-    //   fetchData<APIResponse<IMachine[]>>('http://localhost:5000/api/v1/status')
-    // .then((response) =>{
-    //   const idk = response.data;
-    //   console.log(idk);
-    //   setMachines(idk);
-    //   setLoading(false);
-    // })
-    // .catch((err) =>{
-    //   setError((err as Error).message);
-    //   setLoading(false);
-    // });
-
   }, [])
 
   if (loading) return <div>loading..</div>

@@ -27,10 +27,6 @@ class WindowsOS(BaseOS):
         # model
         serialized_info["manufacturer"] = sys_info["CsManufacturer"]
 
-        # FIXME: add these in the future
-        # storage
-
-        # ram
         return serialized_info
     
 

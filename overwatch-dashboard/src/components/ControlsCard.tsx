@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, Row, Col, Button, Modal, Form, Alert } from "react-bootstrap";
-import { MdOutlineAdd, MdOutlineEdit } from "react-icons/md";
-import {type APIResponse, PostData } from "../FetchAPI";
+import { MdOutlineAdd} from "react-icons/md";
+import {type APIResponse, CustomApiRequest } from "../FetchAPI";
 
 interface payload {
     address: string
@@ -24,18 +24,19 @@ const AddMachineBtn = () => {
     const handleChange = (e: React.ChangeEvent<any>) => {
         const { name, value } = e.target;
         
-        setFormData(prev => ({
+        setFormData(
+            prev => ({
             ...prev,
             // make sure port value is a valid integer
             [name]: name === 'port' ?  parseInt(value) || 22 : value
-            }));
+            })
+        );
     };
 
     // submit form(POST to backend)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-
-        PostData<APIResponse<payload>>('http://localhost:5000/api/v1/add-machine', formData)
+        CustomApiRequest<APIResponse<payload>>('http://localhost:5000/api/v1/add-machine', formData, "POST")
         .then((response) =>{
             const idk = response.data;
             const msg = response.message;
@@ -55,7 +56,6 @@ const AddMachineBtn = () => {
     return (
         <>
         <Button variant="outline-primary" onClick={handleShow}><MdOutlineAdd size={50}></MdOutlineAdd></Button>
-
             <Modal show={show} onHide={handleClose}>
                 {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
             <Modal.Header closeButton>
@@ -68,7 +68,6 @@ const AddMachineBtn = () => {
                 <Form.Control
                     type="text"
                     name="address"
-                    value={formData.address} 
                     placeholder="10.1.1.0"
                     onChange={handleChange}
                 />
@@ -98,9 +97,7 @@ const AddMachineBtn = () => {
                 <Button variant="primary" type="submit">
                     Submit
                 </Button>
-            </Modal.Footer>
-             
-               
+            </Modal.Footer>  
             </Form>
             </Modal.Body>
           

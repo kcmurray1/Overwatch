@@ -1,15 +1,16 @@
 from flask import Blueprint, make_response, current_app, request
 from app.machine_manager import MachineManager
 from app.api_v1.debug_info import generate_mock_machine
-from app.errors import APIError
+from app.core.errors import APIError, response_template
+
 machine_bp = Blueprint("/api/v1", __name__, url_prefix="/api/v1")
 
 @machine_bp.route("/status", methods=["GET"])
 def status():
     """See general information of device (uptime, applications running, name)"""      
     payload = MachineManager.get_all_machines()     
-       
-    return make_response(payload, 200)
+
+    return response_template(status=200, message="ok", data=payload)   
 
 @machine_bp.route("/status-debug/<int:count>", methods=["GET"])
 def status_debug(count):
@@ -37,4 +38,20 @@ def add_machine():
     new_machine = MachineManager.add_machine(machine_addr, machine_port, machine_user, current_app.config["KEY_PATH"])
     return make_response({"created": new_machine}, 201)
 
+@machine_bp.route("/machines/<int:id>", methods=["GET","DELETE"])
+def machine_record(id):
 
+    #FIXME: check if id is valid
+    if request.method == "GET":
+        pass
+    if request.method == "DELETE":
+        MachineManager.remove_machine(id)
+    
+    return make_response({"result": "ok"}, 200)
+
+
+@machine_bp.route("/machines/<int:id>/openvs", methods=["GET"])
+def open_vscode(id):
+    URI = MachineManager.open_vscode(id)
+
+    return response_template(status=200, message="ok", data={"link" : URI})

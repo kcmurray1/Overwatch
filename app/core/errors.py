@@ -31,6 +31,9 @@ class MachineError(Exception):
         self.message = message or self.message
         self.data = data
 
+class MachineAlreadyExists(MachineError):
+    message = "Machine Already Exists"
+
 class UnsupportedMachineOS(MachineError):
     message = "Unsupported OS" 
 

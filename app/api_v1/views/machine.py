@@ -36,13 +36,16 @@ def add_machine():
     except KeyError:
         raise APIError("Invalid Machine details")
     new_machine = MachineManager.add_machine(machine_addr, machine_port, machine_user, current_app.config["KEY_PATH"])
-    return make_response({"created": new_machine}, 201)
+    return response_template(status=201, message="created", data=new_machine)
 
 @machine_bp.route("/machines/<int:id>", methods=["GET","DELETE"])
 def machine_record(id):
 
     #FIXME: check if id is valid
     if request.method == "GET":
+        # all running processes and usage
+        # maybe history of uptime?
+        # signed in users
         pass
     if request.method == "DELETE":
         MachineManager.remove_machine(id)
@@ -55,3 +58,10 @@ def open_vscode(id):
     URI = MachineManager.open_vscode(id)
 
     return response_template(status=200, message="ok", data={"link" : URI})
+
+@machine_bp.route("/machines/<int:id>/restart", methods=["POST"])
+def restart_machine(id):
+
+    MachineManager.restart_machine(id)
+
+    return response_template(status=200, message="restarting..")

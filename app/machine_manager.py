@@ -1,7 +1,5 @@
 import paramiko
-import json
 from sqlalchemy import select, delete
-from flask import current_app
 from app.models import db, Machine
 from app.serializer import MachineSchema
 from app.core.os_platforms.windows import WindowsOS
@@ -9,7 +7,6 @@ from app.core.os_platforms.linux import LinuxOS
 from app.core.os_platforms.base import BaseOS
 from app.core.errors import MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists
 from app.features.vscode.command import launch_vscode
-import subprocess
 
 OS_HANDLERS = {
         "windows" : WindowsOS(),
@@ -105,6 +102,10 @@ class MachineManager:
     def remove_machine(machine_id):
         db.session.execute(delete(Machine).where(Machine.id == machine_id))
         db.session.commit()
+
+    @staticmethod
+    def restart_machine(machine_id):
+        db.session.execute()
 
     @staticmethod
     def get_running_services(machine_id, keypath, offset=None):

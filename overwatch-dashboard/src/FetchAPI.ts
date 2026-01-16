@@ -1,26 +1,23 @@
+import {type  IMachine } from "./types/machines";
+
 // T represents the shape of data we expect to receive from backend
 export interface APIResponse<T> {
     data: T | null;
     message: string;
 }
 
-export async function fetchData<T>(url : string) : Promise<T>
-{   
-    const res = await fetch(url)
-    
-    if(!res.ok)
-    {
-        throw new Error("There was an error fetching url" + url);
-    }
+export type VsCodeResponse = APIResponse<{link : string}>;
+export type MessageOnlyResponse = APIResponse<string>;
+export type GetAllMachinesResponse = APIResponse<IMachine[]>;
+export type AddMachineResponse = APIResponse<IMachine>;
 
-    return (await res.json()) as T
-}
+const BASE_URL = "http://localhost:5000/api/v1";
 
-export async function CustomApiRequest<T>(url: string, data: any | null, method: string) : Promise<T>
+export async function CustomApiRequest<T>(endpoint: string, data: any | null, method: string) : Promise<T>
 {
-    console.log(data);
+    // console.log(data);
     const response = await fetch(
-        url,
+       `${BASE_URL}/${endpoint}`,
         {
             method: method,
             headers: {'Content-Type': 'application/json'},
@@ -38,3 +35,4 @@ export async function CustomApiRequest<T>(url: string, data: any | null, method:
 
     return (result) as T;
 }
+

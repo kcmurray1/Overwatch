@@ -1,17 +1,12 @@
 import { useState } from "react";
-import { Card, Row, Col, Button, Modal, Form, Alert } from "react-bootstrap";
+import { Card, Button, Modal, Form, Alert } from "react-bootstrap";
 import { MdOutlineAdd} from "react-icons/md";
-import {type APIResponse, CustomApiRequest } from "../FetchAPI";
-
-interface payload {
-    address: string
-    username: string
-    port: number
-}
+import { CustomApiRequest, type AddMachineResponse } from "../FetchAPI";
+import {type AddMachineRequest} from "../types/machines"
 
 const AddMachineBtn = () => {
     const [show, setShow] = useState(false);
-    const [formData, setFormData] = useState<payload>({
+    const [formData, setFormData] = useState<AddMachineRequest>({
         address: '',
         username: '',
         port: 22,
@@ -36,13 +31,10 @@ const AddMachineBtn = () => {
     // submit form(POST to backend)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        CustomApiRequest<APIResponse<payload>>('http://localhost:5000/api/v1/add-machine', formData, "POST")
+        CustomApiRequest<AddMachineResponse>('add-machine', formData, "POST")
         .then((response) =>{
-            const idk = response.data;
-            const msg = response.message;
-            console.log(msg);
-            console.log(idk);
-            
+            console.log("added machine", response.data)
+            // only close if successful
             handleClose();
         })
         .catch((err) =>{
@@ -55,7 +47,7 @@ const AddMachineBtn = () => {
 
     return (
         <>
-        <Button variant="outline-primary" onClick={handleShow}><MdOutlineAdd size={50}></MdOutlineAdd></Button>
+        <Button variant="outline-primary" onClick={handleShow}><MdOutlineAdd size={20}></MdOutlineAdd>Add Machine</Button>
             <Modal show={show} onHide={handleClose}>
                 {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
             <Modal.Header closeButton>
@@ -108,20 +100,33 @@ const AddMachineBtn = () => {
 
 }
 
+interface testPropP{
+    machineCount : number | null
+}
 
-export const ControlCard = () => {
-
+export const ControlCard: React.FC<testPropP> = ({machineCount}) => {
     return (
-        <Card>
+        <Card className="mb-4 shadow-sm">
             <Card.Header>Controls</Card.Header>
-            <Row>
-                <Col md={10}>
-                    TBD
-                </Col>
-                <Col md={2}>
+            <Card.Body>
+                {/* d-flex: makes it a flex container */}
+                {/* gap-3: adds consistent space between items */}
+                {/* align-items-center: vertically centers the buttons */}
+                <div className="d-flex gap-3 align-items-center">
+                  
+                    
+                    {/* Now you can just drop in more buttons easily */}
+                    <Button variant="outline-secondary">Restart All</Button>
+                    <Button variant="outline-danger">Stop All</Button>
+
                     <AddMachineBtn />
-                </Col>
-            </Row>
+                    
+                    {/* Use ms-auto (margin-start: auto) to push items to the far right */}
+                    <div className="ms-auto text-muted small">
+                        Total Machines: {machineCount}
+                    </div>
+                </div>
+            </Card.Body>
         </Card>
-    )
+    );
 }

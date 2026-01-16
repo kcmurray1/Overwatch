@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react'
 import { Container, Row, Col} from 'react-bootstrap'
-import { fetchData, type APIResponse } from '../FetchAPI'
-import { type IMachine, MachineCard } from '../components/MachineCard'
+import { CustomApiRequest, type GetAllMachinesResponse,  } from '../FetchAPI'
+import { MachineCard } from '../components/MachineCard'
+import { type IMachine } from '../types/machines'
 import { ControlCard } from '../components/ControlsCard'
 export const MachineDashboard = () => {
   
   // Get machines from backend
   const [machines, setMachines] = useState<IMachine[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [machineCount, setMachineCount] = useState<number | null>(null);
   const[error, setError] = useState<string | null>(null);
 
   useEffect(()=>{
    const loadData = () => {
-    fetchData<APIResponse<IMachine[]>>('http://127.0.0.1:5000/api/v1/status')
+    CustomApiRequest<GetAllMachinesResponse>('status', null, "GET")
       .then((response) => {
         setMachines(response.data);
+        console.log(response.data)
+        setMachineCount(response.data? response.data.length : 0);
         setLoading(false);
       })
       .catch((err) => {
@@ -37,8 +41,8 @@ export const MachineDashboard = () => {
     <>
     <Container fluid>
       <Row>
-       <Col md={4}>
-        <ControlCard/>  
+       <Col md={12}>
+        <ControlCard machineCount={machineCount}/>  
       </Col>
       {machines?.map((machine, key) => (
         <Col md={4} key={key}>

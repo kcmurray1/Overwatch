@@ -1,0 +1,16 @@
+services:
+  app:
+    # Build the Flask application from the current directory
+    build: 
+      context: .
+      dockerfile: app/Dockerfile
+    environment:
+      - KEY_PATH=/app/secrets/id_ecdsa
+    volumes:
+      - ${KEY_PATH}:/app/secrets/id_ecdsa:ro
+  frontend:
+    build: ./overwatch-dashboard
+    ports:
+      - "80:80"
+    depends_on:
+      - app

@@ -1,32 +1,18 @@
 import { Button, Col, Row } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
 import {FaWindows, FaLinux, FaDocker, FaPython} from "react-icons/fa"
-import { MdDelete } from 'react-icons/md';
+import { MdDelete, MdOutlineRestartAlt } from 'react-icons/md';
 import {GrStatusUnknown} from "react-icons/gr"
 import {type IconType } from 'react-icons';
 import { VscVscode } from 'react-icons/vsc';
 import {useNavigate } from 'react-router-dom';
-import {CustomApiRequest, type APIResponse } from '../FetchAPI';
+import {CustomApiRequest, type MessageOnlyResponse, type VsCodeResponse} from '../FetchAPI';
+import { type IMachine } from '../types/machines';
 
-export interface IMachine {
-    id: number
-    address: string
-    os_type: string
-    os: string
-    user: string
-    cpu: string
-    port: number
-    model: string
-    manufacturer: string
-    is_online: boolean
-}
 interface MachineCardProps {
     machine : IMachine
 }
 
-interface payload {
-    link: string
-}
 
 const OS_LOGO_SIZE=50;
 const WATCHLIST_LOGO_SIZE = 40;
@@ -51,7 +37,7 @@ const TopStackBtn: React.FC<TopStackBtnProps> = ({Icon, onClick, disabled }) =>
 
 export const MachineCard: React.FC<MachineCardProps> = ({machine}) =>
 {
-    const {address, os_type, user, cpu, port, model, manufacturer, is_online} = machine;
+    const {address, os_type, user, cpu, port, model, manufacturer, is_online, os} = machine;
     var os_logo = <GrStatusUnknown size={OS_LOGO_SIZE}/>
     if(os_type == "windows")
     {
@@ -73,19 +59,17 @@ export const MachineCard: React.FC<MachineCardProps> = ({machine}) =>
     }
 
     const handleDeleteMachine = () => {
-        CustomApiRequest<APIResponse<payload>>(`http://localhost:5000/api/v1/machines/${machine.id}`, null, "DELETE")
+        CustomApiRequest<MessageOnlyResponse>(`machines/${machine.id}`, null, "DELETE")
             .catch((err) =>{
                 console.log((err as Error).message);
             });
     }
 
-    //used to open vscode in a new window nearhttps://github.com/microsoft/vscode-remote-release/issues/10650 
     const handleOpenVsCode = () => {
-        CustomApiRequest<APIResponse<payload>>(`http://localhost:5000/api/v1/machines/${machine.id}/openvs`, null, "GET")
+        CustomApiRequest<VsCodeResponse>(`machines/${machine.id}/openvs`, null, "GET")
         .then((response) => {
             if (response.data != null)
             {   
-                // window.location.href = `${response.data.link}/home/kmanstudios/dir?windowId=_blank`;
                 window.location.href = response.data.link;
             }
             
@@ -94,6 +78,18 @@ export const MachineCard: React.FC<MachineCardProps> = ({machine}) =>
             console.log((err as Error).message);
         });
     }
+
+    const handleRestartMachine = () => {
+        CustomApiRequest<MessageOnlyResponse>(`machines/${machine.id}/restart`, null, "POST")
+        .then((response)=> {
+            console.log(response.data);
+        })
+        .catch((err) => {
+            console.log((err as Error).message);
+        })
+    }
+
+  
 
     return (
     <Card border={card_border} className='border-3' onClick={handleCardClick} style={{position: 'relative'}}>
@@ -109,16 +105,13 @@ export const MachineCard: React.FC<MachineCardProps> = ({machine}) =>
             </Row>
         </Card.Header>
         <Card.Body>
-            <Card.Text>{cpu}</Card.Text>
-            <h3>Watchlist Applications</h3>
-            {/* Display row of application icons and whether they are runnnig */}
+            <Card.Text><p>{cpu}|{os}</p></Card.Text>
             <Row>
-                <Col md={8}>
-                    <FaDocker size={WATCHLIST_LOGO_SIZE}/> <FaPython size={WATCHLIST_LOGO_SIZE}/>
-                </Col>
+               
                 <Col md={4}>
-                   <TopStackBtn Icon={MdDelete} onClick={handleDeleteMachine} disabled={!is_online}/>
+                   <TopStackBtn Icon={MdDelete} onClick={handleDeleteMachine} disabled={false}/>
                    <TopStackBtn Icon={VscVscode} onClick={handleOpenVsCode} disabled={!is_online}/>
+                   <TopStackBtn Icon={MdOutlineRestartAlt} onClick={handleRestartMachine} disabled={!is_online}/>
                 </Col>
             </Row>
         </Card.Body>

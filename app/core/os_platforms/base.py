@@ -6,6 +6,7 @@ class BaseOS(ABC):
     COMMANDS = {
         "SYS_INFO",
         "PROCESSES",
+        "UPTIME"
     }
 
     def __init_subclass__(cls):

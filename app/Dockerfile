@@ -1,15 +1,15 @@
-FROM python:3.14
+FROM python:3.13-slim
 
 WORKDIR /usr/src/app
 
-COPY ./app/requirements.txt .
+COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . ./app
+COPY . ./app/
+COPY entrypoint.sh .
 
-COPY app/entrypoint.sh .
-RUN chmod +x ./app/entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 EXPOSE 5000
 

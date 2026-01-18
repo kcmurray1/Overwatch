@@ -100,11 +100,18 @@ const AddMachineBtn = () => {
 
 }
 
+
+
+
+
 interface testPropP{
     machineCount : number | null
 }
 
 export const ControlCard: React.FC<testPropP> = ({machineCount}) => {
+
+    
+
     return (
         <Card className="mb-4 shadow-sm">
             <Card.Header>Controls</Card.Header>
@@ -118,7 +125,7 @@ export const ControlCard: React.FC<testPropP> = ({machineCount}) => {
                     {/* Now you can just drop in more buttons easily */}
                     <Button variant="outline-secondary">Restart All</Button>
                     <Button variant="outline-danger">Stop All</Button>
-
+                    
                     <AddMachineBtn />
                     
                     {/* Use ms-auto (margin-start: auto) to push items to the far right */}

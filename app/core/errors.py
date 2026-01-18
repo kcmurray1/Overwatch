@@ -34,6 +34,9 @@ class MachineError(Exception):
 class MachineAlreadyExists(MachineError):
     message = "Machine Already Exists"
 
+class MachineDoesNotExist(MachineError):
+    message = "Machine does not exist"
+
 class UnsupportedMachineOS(MachineError):
     message = "Unsupported OS" 
 

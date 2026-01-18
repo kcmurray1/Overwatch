@@ -1,6 +1,6 @@
 import { Button, Col, Row } from 'react-bootstrap';
 import Card from 'react-bootstrap/Card';
-import {FaWindows, FaLinux, FaDocker, FaPython} from "react-icons/fa"
+import {FaWindows, FaLinux} from "react-icons/fa"
 import { MdDelete, MdOutlineRestartAlt } from 'react-icons/md';
 import {GrStatusUnknown} from "react-icons/gr"
 import {type IconType } from 'react-icons';
@@ -15,7 +15,6 @@ interface MachineCardProps {
 
 
 const OS_LOGO_SIZE=50;
-const WATCHLIST_LOGO_SIZE = 40;
 
 interface TopStackBtnProps {
     Icon: IconType

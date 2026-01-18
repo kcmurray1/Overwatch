@@ -5,13 +5,42 @@ from app.serializer import MachineSchema
 from app.core.os_platforms.windows import WindowsOS
 from app.core.os_platforms.linux import LinuxOS
 from app.core.os_platforms.base import BaseOS
-from app.core.errors import MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists
+from app.core.errors import MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists, MachineDoesNotExist
 from app.features.vscode.command import launch_vscode
+from app.features.docker_manager.docker_manager import DockerManager
 
 OS_HANDLERS = {
         "windows" : WindowsOS(),
         "linux" : LinuxOS()
 }
+
+# https://www.geeksforgeeks.org/python/context-manager-in-python/
+class SSHClientContextManager:
+    def __init__(self, address, port, username, keypath):
+        self.address = address
+        self.port = port
+        self.keypath = keypath
+        self.username = username
+
+    def __enter__(self):
+        self.client = paramiko.SSHClient()
+        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.client.connect(hostname=self.address, port=self.port,  username=self.username, key_filename=self.keypath)
+        return self
+    
+    def execute(self, command):
+        _, stdout, stderr = self.client.exec_command(command)
+
+        # Get exit code
+        cmd_status = stdout.channel.recv_exit_status()
+
+        if cmd_status != 0:
+            print("execute error!")
+            return stderr.read().decode().strip()
+        return stdout.read().decode().strip()
+    
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.client.close()
 
 class MachineManager:
     @staticmethod
@@ -104,8 +133,18 @@ class MachineManager:
         db.session.commit()
 
     @staticmethod
-    def restart_machine(machine_id):
-        db.session.execute()
+    def restart_machine(machine_id, keypath):
+        machine = db.session.execute(select(Machine).where(Machine.id==machine_id)).scalar_one_or_none()
+
+        if not machine:
+            raise MachineDoesNotExist
+        
+        machine_handler = OS_HANDLERS.get(machine.os_type)
+
+        with SSHClientContextManager(machine.address, machine.port, machine.user, keypath) as client:
+            # Execute restart command
+            machine_handler.restart(client.execute)
+
 
     @staticmethod
     def get_running_services(machine_id, keypath, offset=None):
@@ -145,8 +184,34 @@ class MachineManager:
 
         return launch_vscode(machine.user, machine.address, machine.user, machine.os_type)
     
+    @staticmethod
+    def run_project(project_id):
+        # get object from database
+
+        strategy = "basic-selenium"
+        config = {}
+
+        dm = DockerManager(strategy)
+        
+        dm.deploy(config)
+
+    @staticmethod
+    def stop_project(project_id):
+
+        strat = "basic-selenium"
+
+        config = {}
+        dm = DockerManager(strat)
+        
+        dm.stop(config)
+
+    @staticmethod
+    def add_project(data):
+        pass
+
 
         
+
 
 
 

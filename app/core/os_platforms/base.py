@@ -32,6 +32,11 @@ class BaseOS(ABC):
         pass
     
     @abstractmethod
-    def parse_output(self):
-        """Report command execution results as json"""
+    def restart(self, exec_func):
+        """Restart machine"""
+        pass
+
+    @abstractmethod
+    def stop(self, exec_func):
+        """Stop machine"""
         pass

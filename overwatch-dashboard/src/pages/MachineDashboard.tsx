@@ -17,7 +17,6 @@ export const MachineDashboard = () => {
     CustomApiRequest<GetAllMachinesResponse>('status', null, "GET")
       .then((response) => {
         setMachines(response.data);
-        console.log(response.data)
         setMachineCount(response.data? response.data.length : 0);
         setLoading(false);
       })

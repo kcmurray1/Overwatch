@@ -5,7 +5,8 @@ class WindowsOS(BaseOS):
 
     COMMANDS = {
         "SYS_INFO": """powershell "Get-ComputerInfo | ConvertTo-Json" """,
-        "PROCESSES": """powershell "get-process | Sort-Object CPU -Descending | Select-Object -First 10 -Property Name, Id, CPU | ConvertTo-Json" """
+        "PROCESSES": """powershell "get-process | Sort-Object CPU -Descending | Select-Object -First 10 -Property Name, Id, CPU | ConvertTo-Json" """,
+        "RESTART" : """powershell "Restart-Computer" """
     }
 
     def get_system_info(self, exec_fun):
@@ -36,9 +37,10 @@ class WindowsOS(BaseOS):
 
         return json.loads(processes)
 
-    def parse_output(self):
-        """basic parser to convert command execution results as json"""
+    def restart(self, exec_fun):
+        print("restarting... windows")
+        exec_fun(self.COMMANDS['RESTART'])
+        return 
+    
+    def stop(self, exec_fun):
         pass
-
-    def get_os_cmd(self):
-        return """powershell "Get-ComputerInfo -Property OsName | ConvertTo-Json " """

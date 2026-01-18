@@ -42,6 +42,8 @@ class LinuxOS(BaseOS):
         """Get running applications/services"""
         pass
 
-    def parse_output(self):
-        """Report command execution results as json"""
+    def restart(self):
+        pass
+
+    def stop(self):
         pass

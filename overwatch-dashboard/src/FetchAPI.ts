@@ -11,7 +11,7 @@ export type MessageOnlyResponse = APIResponse<string>;
 export type GetAllMachinesResponse = APIResponse<IMachine[]>;
 export type AddMachineResponse = APIResponse<IMachine>;
 
-const BASE_URL = "http://localhost:5000/api/v1";
+const BASE_URL = "api/v1";
 
 export async function CustomApiRequest<T>(endpoint: string, data: any | null, method: string) : Promise<T>
 {

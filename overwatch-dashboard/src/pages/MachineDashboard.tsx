@@ -14,7 +14,7 @@ export const MachineDashboard = () => {
 
   useEffect(()=>{
    const loadData = () => {
-    CustomApiRequest<GetAllMachinesResponse>('status', null, "GET")
+    CustomApiRequest<GetAllMachinesResponse>('machines', null, "GET")
       .then((response) => {
         setMachines(response.data);
         setMachineCount(response.data? response.data.length : 0);

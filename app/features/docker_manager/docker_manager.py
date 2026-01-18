@@ -1,14 +1,8 @@
 import docker
-from .strategies.basic_selenium_grid import BasicSeleniumGrid
-
-STRATEGIES = {
-    "basic-selenium": BasicSeleniumGrid()
-}
-
+# from .strategies.basic_selenium_grid import BasicSeleniumGrid
 class DockerManager:
     def __init__(self, strategy_name):
-        self.strategy = STRATEGIES[strategy_name]
-
+        pass
     
     def deploy(self, config):
         self.strategy.deploy(config=config)

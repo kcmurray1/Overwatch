@@ -31,7 +31,7 @@ const AddMachineBtn = () => {
     // submit form(POST to backend)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        CustomApiRequest<AddMachineResponse>('add-machine', formData, "POST")
+        CustomApiRequest<AddMachineResponse>('machines', formData, "POST")
         .then((response) =>{
             console.log("added machine", response.data)
             // only close if successful

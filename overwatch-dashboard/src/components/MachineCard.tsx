@@ -65,7 +65,7 @@ export const MachineCard: React.FC<MachineCardProps> = ({machine}) =>
     }
 
     const handleOpenVsCode = () => {
-        CustomApiRequest<VsCodeResponse>(`machines/${machine.id}/openvs`, null, "GET")
+        CustomApiRequest<VsCodeResponse>(`machines/${machine.id}/openvs`, null, "POST")
         .then((response) => {
             if (response.data != null)
             {   

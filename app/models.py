@@ -55,7 +55,7 @@ class Project(db.Model):
     name: Mapped[str] = mapped_column()
     strategy_type: Mapped[str] = mapped_column()
     compose_text: Mapped[str] = mapped_column(Text)
-    config: Mapped[MutableDict[JSON]] = mapped_column()
+    config: Mapped[MutableDict[JSON]] = mapped_column
 
     deployments: Mapped[List["MachineProject"]] = relationship(back_populates="project", cascade="all, delete-orphan")
 

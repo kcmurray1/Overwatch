@@ -1,5 +1,7 @@
+from .base import BaseDeploymentStrategy, register_strategy
 
-
-class DockerRegistry:
-     def __init__(self):
-        pass
+@register_strategy("Registry")
+class DockerRegistry(BaseDeploymentStrategy):
+     def deploy(self):
+         pass
+     

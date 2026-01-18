@@ -1,6 +1,9 @@
 import docker
 import time
-class BasicSeleniumGrid:
+from .base import BaseDeploymentStrategy, register_strategy
+
+@register_strategy("BasicSeleniumGrid")
+class BasicSeleniumGrid(BaseDeploymentStrategy):
 
     def __init__(self, project_name="default-basic-selenium-grid"):
         self.HUB_IMAGE =  "selenium/hub:4.39.0-20251212"

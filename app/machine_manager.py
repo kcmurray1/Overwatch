@@ -8,7 +8,7 @@ from app.core.os_platforms.base import BaseOS
 from app.core.errors import MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists, MachineDoesNotExist
 from app.features.vscode.command import launch_vscode
 from app.features.docker_manager.docker_manager import DockerManager
-
+from app.features.docker_manager.strategies.base import STRATEGY_REGISTRY
 OS_HANDLERS = {
         "windows" : WindowsOS(),
         "linux" : LinuxOS()
@@ -65,6 +65,7 @@ class MachineManager:
     @staticmethod
     def get_all_machines():
         """Return system information for all machines"""     
+        print(STRATEGY_REGISTRY)
         machines = db.session.execute(select(Machine)).scalars()
         
         return MachineSchema(many=True).dump(machines)

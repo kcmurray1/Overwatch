@@ -31,6 +31,9 @@ class MachineError(Exception):
         self.message = message or self.message
         self.data = data
 
+class ProjectDoesNotExist(MachineError):
+    message = "Project does not exist"
+
 class MachineAlreadyExists(MachineError):
     message = "Machine Already Exists"
 

@@ -23,3 +23,18 @@ api_bp.add_url_rule(
     view_func=machine_view.MachineAction.as_view('machine_action'),
     methods=["POST"]
 )
+api_bp.add_url_rule(
+    "/projects",
+    view_func=project_view.ProjectCollection.as_view('project-collection'),
+    methods=["GET", "POST"]
+)
+api_bp.add_url_rule(
+    "/projects/<int:id>",
+    view_func=project_view.ProjectRecord.as_view('project-record'),
+    methods=["GET", "DELETE"]
+)
+api_bp.add_url_rule(
+    "projects/<int:id>/<any(stop):action>",
+    view_func=project_view.ProjectAction.as_view('project_action'),
+    methods=["POST"]
+)

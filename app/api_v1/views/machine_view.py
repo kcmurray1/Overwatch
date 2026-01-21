@@ -1,5 +1,5 @@
 from flask.views import MethodView
-from flask import make_response, current_app, request
+from flask import current_app, request
 from app.machine_manager import MachineManager
 from app.api_v1.debug_info import generate_mock_machine
 from app.core.errors import APIError, response_template
@@ -16,7 +16,6 @@ class MachineCollection(MethodView):
 
     def post(self):
         data = request.get_json()
-        print("adding machine", data)
         try:
             machine_addr = data["address"]
             machine_port = data["port"]

@@ -1,6 +1,6 @@
 from sqlalchemy import ForeignKey, Table, Column, Enum, Text, String
 
-from typing import List
+from typing import List, Dict
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy import JSON
@@ -10,6 +10,12 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 
+machine_project = Table(
+    "machine_project",
+    db.Model.metadata,
+    Column("machines", ForeignKey("machines.id"), primary_key=True),
+    Column("projects", ForeignKey("projects.id"), primary_key=True)
+)
 
 class Machine(db.Model):
     __tablename__ = "machines"
@@ -18,7 +24,6 @@ class Machine(db.Model):
 
     address: Mapped[str] = mapped_column()
 
-    #NOTE: convert to enumerator
     os_type: Mapped[str] = mapped_column()
     
     os: Mapped[str] = mapped_column()
@@ -35,7 +40,7 @@ class Machine(db.Model):
 
     is_online: Mapped[bool] = mapped_column(default=False)
 
-    deployments: Mapped[List["MachineProject"]] = relationship(back_populates="machine", cascade="all, delete-orphan")
+    projects: Mapped[List["Project"]] = relationship(secondary=machine_project, back_populates="machines")
 
 
     def __repr__(self):
@@ -49,26 +54,17 @@ class Watchlist(db.Model):
     name: Mapped[str] = mapped_column()
 
 class Project(db.Model):
-    __tablename__ = "project"
+    __tablename__ = "projects"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column()
+    name: Mapped[str] = mapped_column(unique=True)
     strategy_type: Mapped[str] = mapped_column()
-    compose_text: Mapped[str] = mapped_column(Text)
-    config: Mapped[MutableDict[JSON]] = mapped_column
 
-    deployments: Mapped[List["MachineProject"]] = relationship(back_populates="project", cascade="all, delete-orphan")
+    config: Mapped[Dict] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
-class MachineProject(db.Model):
-    __tablename__ = "machine_projects"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    machine_id: Mapped[int] = mapped_column(ForeignKey("machines.id"))
-    project_id: Mapped[int] = mapped_column(ForeignKey("project.id"))
+    deployment_metadata: Mapped[Dict] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
     
-    # Relationships
-    machine: Mapped["Machine"] = db.relationship(back_populates="deployments")
-    project: Mapped["Project"] = db.relationship(back_populates="deployments")
+    machines: Mapped[List["Machine"]] = relationship(secondary=machine_project, back_populates="projects")
 
-    # Your metadata
-    container_id: Mapped[str] = mapped_column(nullable=True)
-    status: Mapped[str] = mapped_column(default="stopped")
+    def __repr__(self):
+        return f"Project:{self.name} using the strategy {self.strategy_type}"

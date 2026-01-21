@@ -32,7 +32,7 @@ def create_app():
         scheduler.add_job(
             func=MachineManager.check_connections,
             trigger="interval",
-            seconds=15,
+            seconds=20,
             args=[app],
             next_run_time=datetime.now(),
             max_instances=1

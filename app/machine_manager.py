@@ -1,14 +1,15 @@
 import paramiko
 from sqlalchemy import select, delete
-from app.models import db, Machine
-from app.serializer import MachineSchema
+from app.models import db, Machine, Project
+from app.serializer import MachineSchema, ProjectSchema
 from app.core.os_platforms.windows import WindowsOS
 from app.core.os_platforms.linux import LinuxOS
 from app.core.os_platforms.base import BaseOS
-from app.core.errors import MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists, MachineDoesNotExist
+from app.core.errors import (MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists, 
+                             MachineDoesNotExist, ProjectDoesNotExist)
 from app.features.vscode.command import launch_vscode
 from app.features.docker_manager.docker_manager import DockerManager
-from app.features.docker_manager.strategies.base import STRATEGY_REGISTRY
+from app.features.docker_manager.strategies.base_recipe import STRATEGY_REGISTRY
 OS_HANDLERS = {
         "windows" : WindowsOS(),
         "linux" : LinuxOS()
@@ -52,7 +53,6 @@ class MachineManager:
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             # attempt to connect to each machine
             for machine in machines:
-                print("attempting connection to", machine.address)
                 try:
                     client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=app.config["KEY_PATH"], timeout=5)
                     machine.is_online = True
@@ -64,8 +64,7 @@ class MachineManager:
 
     @staticmethod
     def get_all_machines():
-        """Return system information for all machines"""     
-        print(STRATEGY_REGISTRY)
+        """Return system information for all machines"""    
         machines = db.session.execute(select(Machine)).scalars()
         
         return MachineSchema(many=True).dump(machines)
@@ -186,30 +185,73 @@ class MachineManager:
         return launch_vscode(machine.user, machine.address, machine.user, machine.os_type)
     
     @staticmethod
-    def run_project(project_id):
-        # get object from database
-
-        strategy = "basic-selenium"
-        config = {}
-
-        dm = DockerManager(strategy)
+    def get_projects():
+        projects = db.session.execute(select(Project)).scalars()
+        return  ProjectSchema(many=True).dump(projects)
+    
+    def stop_project(id):
+        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
+        if not project:
+            return ProjectDoesNotExist
         
-        dm.deploy(config)
+        recipe = STRATEGY_REGISTRY[project.strategy_type]
+        
+        machine_objects = []
+        for machine in project.config['machines']:
+            machine_obj = db.session.execute(select(Machine).where(Machine.id==machine['id'])).scalar_one_or_none()
+            if not machine_obj:
+                raise MachineDoesNotExist
+            machine['machine_object'] = machine_obj
+            machine_objects.append(machine)
+        result = recipe().stop(machine_objects)
+        return {}
+    
+    def get_project(id):
+        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
+        if not project:
+            raise ProjectDoesNotExist
+        return ProjectSchema().dump(project)
+    
+    def remove_project(id):
+        db.session.execute(delete(Project).where(Project.id == id))
+        db.session.commit()
+
 
     @staticmethod
-    def stop_project(project_id):
-
-        strat = "basic-selenium"
-
-        config = {}
-        dm = DockerManager(strat)
+    def add_project(data: dict):
+   
+        # config is {env, machines, image}, recipe is the strategy to use, name is the alias for the project
+        required_keys = {'env', 'machines', 'images', 'recipe', 'name'}
+        required_keys -= set(data.keys())
+        if required_keys:
+            print("missing keys", required_keys)
+            return
         
-        dm.stop(config)
+        recipe = STRATEGY_REGISTRY[data.get('recipe')]
 
-    @staticmethod
-    def add_project(data):
-        pass
-
+        machines_obj = []
+     
+        machines = []
+        for machine_config in data.get('machines'):
+            machine = db.session.execute(select(Machine).where(Machine.id==machine_config['id'])).scalar_one_or_none()
+            if not machine:
+                raise MachineDoesNotExist
+            machines_obj.append(machine)
+            machines.append({"machine": machine, "role": machine_config['role']})
+        result = recipe().deploy(data.get('name'), data.get('env'), data.get('images'), machines)
+        print("deployed...")
+     
+        new_project = Project(
+            name=data.get('name'),
+            strategy_type=data.get('recipe'),
+        )  
+        db.session.add(new_project)
+        db.session.flush()
+        machines=machines_obj
+        new_project.config = result
+        db.session.commit()
+   
+        return ProjectSchema().dump(new_project)
 
         
 

@@ -225,7 +225,7 @@ class MachineManager:
         required_keys -= set(data.keys())
         if required_keys:
             print("missing keys", required_keys)
-            return
+            raise MachineDoesNotExist
         
         recipe = STRATEGY_REGISTRY[data.get('recipe')]
 

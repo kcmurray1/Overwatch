@@ -16,6 +16,7 @@ class MachineCollection(MethodView):
 
     def post(self):
         data = request.get_json()
+        print("adding maching", data)
         try:
             machine_addr = data["address"]
             machine_port = data["port"]

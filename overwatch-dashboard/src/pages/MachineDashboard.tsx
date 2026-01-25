@@ -4,9 +4,9 @@ import { CustomApiRequest, type GetAllMachinesResponse,  } from '../FetchAPI'
 import { MachineCard } from '../components/MachineCard'
 import { type IMachine } from '../types/machines'
 import { ControlCard } from '../components/ControlsCard'
+
+// Get Machine information from backend to construct view, otherwise show error or loading screen
 export const MachineDashboard = () => {
-  
-  // Get machines from backend
   const [machines, setMachines] = useState<IMachine[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [machineCount, setMachineCount] = useState<number | null>(null);

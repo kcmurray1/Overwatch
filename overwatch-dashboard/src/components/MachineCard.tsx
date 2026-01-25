@@ -104,7 +104,7 @@ export const MachineCard: React.FC<MachineCardProps> = ({machine}) =>
             </Row>
         </Card.Header>
         <Card.Body>
-            <Card.Text><p>{cpu}|{os}</p></Card.Text>
+            <Card.Text>{cpu}|{os}</Card.Text>
             <Row>
                
                 <Col md={4}>

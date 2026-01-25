@@ -4,6 +4,7 @@ import { MachineDashboard } from './pages/MachineDashboard'
 import { MyNavBar } from './components/MyNavBar'
 import { MachineDetails } from './pages/MachineDetails';
 import { Row, Col, Container } from 'react-bootstrap';
+import { ProjectDashboard } from './pages/ProjectDashboard';
 function App() {
   return (
     <BrowserRouter>
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MachineDashboard/>} />
           <Route path="/machine-details/:id" element={<MachineDetails/>} />
+          <Route path="/projects" element={<ProjectDashboard/>} />
         </Routes>
       </Col>
     </Row>

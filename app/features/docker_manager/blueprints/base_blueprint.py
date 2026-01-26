@@ -1,22 +1,33 @@
-STRATEGY_REGISTRY = {}
+BLUEPRINT_REGISTRY = {}
 import docker
-def register_strategy(name):
-    def decorator(cls):
-        STRATEGY_REGISTRY[name] = cls
-        return cls
-    return decorator
 
-class BaseDeploymentStrategy:
-    def get_client(self, ip, user, port=22):
+class BaseBlueprint:
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        BLUEPRINT_REGISTRY[cls.__name__] = cls
+
+    def get_client(self, machine_obj):
         """return DockerClient after establishing SSH connection remote machine\n
            :NOTE: This will not function if the target device and client device do not have
            SSH authentication setup
         """
-        return docker.DockerClient(base_url=f"ssh://{user}@{ip}:{port}", use_ssh_client=True)
+        return docker.DockerClient(base_url=f"ssh://{machine_obj.user}@{machine_obj.address}:{machine_obj.port}", use_ssh_client=True)
         
-    def deploy(self, container_name, environment, images, machines):
+    def start(self, deployment_metadata):
         """Run docker container(s) on targeted machine(s), subclass must define this as environment variables, images, and the number
         of machines vary.
+        """
+        for machine in deployment_metadata:
+            machine_obj = machine.get('machine_object')
+            docker_client = self.get_client(machine_obj)
+            project_container = docker_client.containers.get(machine['container_id'])
+            project_container.start()
+    
+    def create(self, container_name, environment, images, machines):
+        """Create and push docker container provided the image, environment variables and name for the container.
+           Each project is unique and may require this method to be overridden
         """
         raise NotImplementedError
     
@@ -29,7 +40,7 @@ class BaseDeploymentStrategy:
         for machine in machines:
             machine_obj = machine['machine_object']
             try:
-                client = self.get_client(machine_obj.address, machine_obj.user, machine_obj.port)
+                client = self.get_client(machine_obj)
 
                 container = client.containers.get(container_id=machine["container_id"])
                 container.remove(force=True)

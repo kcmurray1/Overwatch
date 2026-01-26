@@ -14,10 +14,11 @@ def create_app():
 
     # from .api_v1.views.machine import machine_bp
     from .api_v1 import api_bp
-    from app.core.errors import (unexpected_error, machine_error, MachineError)
+    from app.core.errors import (unexpected_error, machine_error, project_error, MachineError, ProjectError)
     app.register_blueprint(api_bp)
     app.register_error_handler(Exception, unexpected_error)
     app.register_error_handler(MachineError, machine_error)
+    app.register_error_handler(ProjectError, project_error)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///machines.db"
     app.config['KEY_PATH'] = os.environ.get("KEY_PATH")

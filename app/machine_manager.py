@@ -6,10 +6,9 @@ from app.core.os_platforms.windows import WindowsOS
 from app.core.os_platforms.linux import LinuxOS
 from app.core.os_platforms.base import BaseOS
 from app.core.errors import (MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists, 
-                             MachineDoesNotExist, ProjectDoesNotExist)
+                             MachineDoesNotExist, MissingProjectFields, ProjectDoesNotExist)
 from app.features.vscode.command import launch_vscode
-from app.features.docker_manager.docker_manager import DockerManager
-from app.features.docker_manager.strategies.base_recipe import STRATEGY_REGISTRY
+from app.features.docker_manager.blueprints.base_blueprint import BLUEPRINT_REGISTRY
 OS_HANDLERS = {
         "windows" : WindowsOS(),
         "linux" : LinuxOS()
@@ -187,6 +186,7 @@ class MachineManager:
     @staticmethod
     def get_projects():
         projects = db.session.execute(select(Project)).scalars()
+        print(BLUEPRINT_REGISTRY)
         return  ProjectSchema(many=True).dump(projects)
     
     def stop_project(id):
@@ -194,15 +194,9 @@ class MachineManager:
         if not project:
             return ProjectDoesNotExist
         
-        recipe = STRATEGY_REGISTRY[project.strategy_type]
+        recipe = BLUEPRINT_REGISTRY[project.strategy_type]
         
-        machine_objects = []
-        for machine in project.config['machines']:
-            machine_obj = db.session.execute(select(Machine).where(Machine.id==machine['id'])).scalar_one_or_none()
-            if not machine_obj:
-                raise MachineDoesNotExist
-            machine['machine_object'] = machine_obj
-            machine_objects.append(machine)
+        machine_objects = Project.hydrate_machines(project.deployment_metadata['machines'])
         result = recipe().stop(machine_objects)
         return {}
     
@@ -216,42 +210,46 @@ class MachineManager:
         db.session.execute(delete(Project).where(Project.id == id))
         db.session.commit()
 
-
     @staticmethod
-    def add_project(data: dict):
-   
-        # config is {env, machines, image}, recipe is the strategy to use, name is the alias for the project
-        required_keys = {'env', 'machines', 'images', 'recipe', 'name'}
-        required_keys -= set(data.keys())
-        if required_keys:
-            print("missing keys", required_keys)
-            raise MachineDoesNotExist
+    def add_project(env, machines, images, recipe, name):
+        # a project can not be added if no recipe or machine is selected
+        if not recipe or not machines:
+            raise MissingProjectFields(message="Missing recipe and machine(s) selection")
         
-        recipe = STRATEGY_REGISTRY[data.get('recipe')]
+        recipe_obj = BLUEPRINT_REGISTRY[recipe]
 
-        machines_obj = []
-     
-        machines = []
-        for machine_config in data.get('machines'):
-            machine = db.session.execute(select(Machine).where(Machine.id==machine_config['id'])).scalar_one_or_none()
-            if not machine:
-                raise MachineDoesNotExist
-            machines_obj.append(machine)
-            machines.append({"machine": machine, "role": machine_config['role']})
-        result = recipe().deploy(data.get('name'), data.get('env'), data.get('images'), machines)
-        print("deployed...")
-     
+        machines_cleaned = Project.hydrate_machines(machines)
+       
+        # machines_cleaned.append({"machine": machine, "role": machine_config['role']})
+        result = recipe_obj().create(name, env, images, machines_cleaned)
+      
         new_project = Project(
-            name=data.get('name'),
-            strategy_type=data.get('recipe'),
+            name=name,
+            strategy_type=recipe,
         )  
         db.session.add(new_project)
         db.session.flush()
-        machines=machines_obj
-        new_project.config = result
+        new_project.config = {"env": env, "machines": machines, "images": images}
+        print(result)
+        new_project.deployment_metadata = {"machines" : result}
+        
         db.session.commit()
-   
         return ProjectSchema().dump(new_project)
+    
+    def start_project(id):
+        # get project
+        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
+
+        if not project:
+            raise ProjectDoesNotExist
+        # FIXME: check if invalid blueprint key
+        blueprint_obj = BLUEPRINT_REGISTRY.get(project.strategy_type)
+        updated_machines = Project.hydrate_machines(project.deployment_metadata['machines']) 
+        blueprint_obj().start(updated_machines)
+
+        return {}
+    
+
 
         
 

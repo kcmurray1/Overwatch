@@ -2,13 +2,13 @@
 Docstring for app.features.docker_manager.strategies.cloudflared
 
 """
-from .base_recipe import BaseDeploymentStrategy, register_strategy
+from .base_blueprint import BaseBlueprint
 from app.models import Machine
 import docker
 from dotenv import load_dotenv
 import os
-@register_strategy("CloudFlared")
-class CloudFlared(BaseDeploymentStrategy):
+
+class CloudFlaredBlueprint(BaseBlueprint):
 
     DEFAULT_IMAGE= "cloudflare/cloudflared:latest"
     def deploy(self, container_name, environment, images, machines):

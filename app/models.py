@@ -3,7 +3,7 @@ from sqlalchemy import ForeignKey, Table, Column, Enum, Text, String
 from typing import List, Dict
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy import JSON
+from sqlalchemy import JSON, select
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -66,5 +66,19 @@ class Project(db.Model):
     
     machines: Mapped[List["Machine"]] = relationship(secondary=machine_project, back_populates="projects")
 
+    @staticmethod
+    def hydrate_machines(machines):
+        machine_ids = [m['id'] for m in machines]
+        machine_objects = {m.id: m for m in db.session.execute(select(Machine).where(Machine.id.in_(machine_ids))).scalars().all()}
+        updated_machines = []
+
+        for machine_metadata in machines:
+            idk = machine_metadata.copy()
+            idk['machine_object'] = machine_objects[machine_metadata['id']]
+            updated_machines.append(idk)
+        return updated_machines
+
     def __repr__(self):
         return f"Project:{self.name} using the strategy {self.strategy_type}"
+    
+

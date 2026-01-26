@@ -34,7 +34,7 @@ api_bp.add_url_rule(
     methods=["GET", "DELETE"]
 )
 api_bp.add_url_rule(
-    "projects/<int:id>/<any(stop):action>",
+    "projects/<int:id>/<any(stop, start):action>",
     view_func=project_view.ProjectAction.as_view('project_action'),
     methods=["POST"]
 )

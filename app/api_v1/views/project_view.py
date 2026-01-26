@@ -1,8 +1,8 @@
 from flask.views import MethodView
-from flask import make_response, current_app, request
+from flask import request
 from app.machine_manager import MachineManager
 from app.api_v1.debug_info import generate_mock_machine
-from app.core.errors import APIError, response_template
+from app.core.errors import response_template
 
 class ProjectCollection(MethodView):
 
@@ -10,7 +10,7 @@ class ProjectCollection(MethodView):
         return response_template(200, "ok",  MachineManager.get_projects())
     
     def post(self):
-        result = MachineManager.add_project(request.get_json())
+        result = MachineManager.add_project(**request.get_json())
         return response_template(200, "ok", result)
 
 
@@ -30,3 +30,5 @@ class ProjectAction(MethodView):
     def post(self, id, action):
         if action == "stop":
             return MachineManager.stop_project(id)
+        if action == "start":
+            return MachineManager.start_project(id)

@@ -1,9 +1,40 @@
 import { useEffect, useState } from 'react'
-import { Container, Row, Col} from 'react-bootstrap'
+import { Container, Row, Col, Table, Button, Card} from 'react-bootstrap'
 import { CustomApiRequest, type GetAllProjectsResponse } from '../FetchAPI'
 import type { IProject } from '../types/projects'
 import { AddProjectBtn } from '../components/AddProjectBtn'
 
+
+interface ProjectTableProps{
+  projects: IProject[] | null
+}
+
+const ProjectTable = ({projects}: ProjectTableProps) => {
+
+  return (
+  <Table striped hover>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Strategy</th>
+        <th>Command</th>
+        <th>Command</th>
+      </tr>
+    </thead>
+    <tbody>
+      {projects?.map((project,key) =>
+        <tr key={key}>
+          <td>{project.name}</td>
+          <td>{project.strategy_type}</td>
+          
+          <td> <div className="d-flex gap-3 align-items-center"><Button>Start</Button><Button>Restart</Button></div></td>
+          <td>dummy</td>
+        </tr>
+      )}
+    </tbody>
+  </Table>
+  )
+}
 
 export const ProjectDashboard = () => {
   const [projects, setProjects] = useState<IProject[] | null>(null);
@@ -11,16 +42,20 @@ export const ProjectDashboard = () => {
   const[error, setError] = useState<string | null>(null);
   
   useEffect(()=>{
-    CustomApiRequest<GetAllProjectsResponse>('projects', null, "GET")
-      .then((response) => {
-        setProjects(response.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError((err as Error).message);
-        setLoading(false);
-      });
 
+    const fetchData = async () =>{
+      try {
+        setLoading(true);
+        const projects = await CustomApiRequest<GetAllProjectsResponse>('projects', null, "GET");
+
+        setProjects(projects.data);
+      } catch (err) {
+        setError((err as Error).message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData();
   }, [])
 
   if (loading) return <div>loading..</div>
@@ -33,16 +68,7 @@ export const ProjectDashboard = () => {
         <AddProjectBtn projects={projects}/>
       </Row>
       <Row>
-       <Col md={12}>
-        hello
-      </Col>
-      {projects?.map((project, key) => (
-        <Col md={4} key={key}>
-            {project.name}{project.id}
-        <br></br>
-        </Col>
-        )
-      )}
+      <ProjectTable projects={projects}/>
       </Row>
     </Container>    
     </>

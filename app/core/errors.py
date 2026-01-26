@@ -13,6 +13,9 @@ def handle_api_error(error):
 def machine_error(machine_error):
     return response_template(machine_error.status_code, machine_error.message)
 
+def project_error(project_error):
+    return response_template(project_error.status_code, project_error.message)
+
 class APIError(Exception):
     status_code = 400
     message = "API Error"
@@ -31,8 +34,22 @@ class MachineError(Exception):
         self.message = message or self.message
         self.data = data
 
-class ProjectDoesNotExist(MachineError):
+class ProjectError(Exception):
+    message = "A project error occured"
+    def __init__(self, message="A project error occured", data=None, status_code=500):
+        self.message = message
+        self.data = data
+        self.status = status_code
+
+
+class ProjectDoesNotExist(ProjectError):
     message = "Project does not exist"
+    status_code =  400
+
+class MissingProjectFields(ProjectError):
+    message = "Unable to add project missing fields: "
+    status_code = 400
+
 
 class MachineAlreadyExists(MachineError):
     message = "Machine Already Exists"

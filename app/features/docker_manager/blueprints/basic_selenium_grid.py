@@ -1,9 +1,8 @@
 import docker
 import time
-from .base_recipe import BaseDeploymentStrategy, register_strategy
+from .base_blueprint import BaseBlueprint
 
-@register_strategy("BasicSeleniumGrid")
-class BasicSeleniumGrid(BaseDeploymentStrategy):
+class SeleniumGridBlueprint(BaseBlueprint):
     DEFAULT_HUB_IMAGE = "selenium/hub:4.39.0-20251212"
     DEFAULT_NODE_IMAGE = "selenium/node-chrome:4.39.0-20251212"
     DEFAULT_MAX_SESSIONS = 5
@@ -16,8 +15,8 @@ class BasicSeleniumGrid(BaseDeploymentStrategy):
         hub = next(machine for machine in machines if machine['role'] == 'hub')
         nodes = [machine for machine in machines if machine['role'] == 'node']
         
-        hub_img = BasicSeleniumGrid.DEFAULT_HUB_IMAGE
-        node_img = BasicSeleniumGrid.DEFAULT_NODE_IMAGE
+        hub_img = SeleniumGridBlueprint.DEFAULT_HUB_IMAGE
+        node_img = SeleniumGridBlueprint.DEFAULT_NODE_IMAGE
         # check for images
         if images:
             hub_img = next(image for image in images if image['role'] == 'hub')

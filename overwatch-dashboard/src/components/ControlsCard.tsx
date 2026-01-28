@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Card, Button } from "react-bootstrap";
-import { MdOutlineAdd} from "react-icons/md";
 import { CustomApiRequest, type AddMachineResponse } from "../FetchAPI";
 import {type AddMachineRequest} from "../types/machines"
 import { DisplayFormBtn, type FormField } from "./DisplayFormBtn";
@@ -31,21 +30,23 @@ const AddMachineBtn = () => {
             })
         );
     };
-
+    const clearError = ()=> setError(null);
     // Post to backend
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        CustomApiRequest<AddMachineResponse>('machines', formData, "POST")
+        return CustomApiRequest<AddMachineResponse>('machines', formData, "POST")
         .then((response) =>{
             console.log("added machine", response.data)
+            return true
         })
         .catch((err) =>{
             setError((err as Error).message);
+            return false
         });
     }
 
     return (
-        <DisplayFormBtn title="Add Machine" onSubmit={handleSubmit} onChange={handleChange} formFields={AddMachineFormFields} error={error}/>
+        <DisplayFormBtn formData={formData} title="Add Machine" onSubmit={handleSubmit} onChange={handleChange} formFields={AddMachineFormFields} error={error} clearError={clearError}/>
     )
 }
 

@@ -1,4 +1,5 @@
 BLUEPRINT_REGISTRY = {}
+BLUEPRINT_STRUCTURES = {}
 import docker
 
 class BaseBlueprint:
@@ -6,7 +7,11 @@ class BaseBlueprint:
     @classmethod
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+        BLUEPRINT_STRUCTURES[cls.__name__] = cls.get_structure(cls) if cls.get_structure(cls) else {"name": cls.__name__}
         BLUEPRINT_REGISTRY[cls.__name__] = cls
+
+    def get_structure(self):
+        pass
 
     def get_client(self, machine_obj):
         """return DockerClient after establishing SSH connection remote machine\n

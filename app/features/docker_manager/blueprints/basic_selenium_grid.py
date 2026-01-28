@@ -7,6 +7,10 @@ class SeleniumGridBlueprint(BaseBlueprint):
     DEFAULT_NODE_IMAGE = "selenium/node-chrome:4.39.0-20251212"
     DEFAULT_MAX_SESSIONS = 5
 
+
+    def get_structure(self):
+        return {"name": self.__name__, "struct": {"machine_roles": [{"name": "hub", "many":False}, {"name": "node", "many": True}]}}
+
     def deploy(self, container_name, environment, images, machines):
         deployment_metadata = {'machines': []}
         # environment will be basic k-v pairs

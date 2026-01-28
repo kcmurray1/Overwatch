@@ -1,3 +1,4 @@
+import type { BlueprintProps } from "./components/DisplayFormBtn";
 import {type  IMachine } from "./types/machines";
 import { type IProject } from "./types/projects";
 // T represents the shape of data we expect to receive from backend
@@ -12,6 +13,7 @@ export type GetAllMachinesResponse = APIResponse<IMachine[]>;
 export type AddMachineResponse = APIResponse<IMachine>;
 export type AddProjectResponse = APIResponse<IProject>;
 export type GetAllProjectsResponse = APIResponse<IProject[]>;
+export type GetProjectBlueprintsResponse = APIResponse<BlueprintProps[]>;
 
 const BASE_URL = "http://localhost:5000/api/v2";
 

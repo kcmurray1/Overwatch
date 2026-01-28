@@ -10,7 +10,9 @@ class ProjectCollection(MethodView):
         return response_template(200, "ok",  MachineManager.get_projects())
     
     def post(self):
+        print(request.get_json())
         result = MachineManager.add_project(**request.get_json())
+
         return response_template(200, "ok", result)
 
 

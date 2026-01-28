@@ -1,4 +1,4 @@
-from .views import machine_view, project_view
+from .views import machine_view, project_view, project_blueprints_view
 from flask import Blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api/v2')
 
@@ -37,4 +37,10 @@ api_bp.add_url_rule(
     "projects/<int:id>/<any(stop, start):action>",
     view_func=project_view.ProjectAction.as_view('project_action'),
     methods=["POST"]
+)
+
+api_bp.add_url_rule(
+    "blueprints", 
+    view_func=project_blueprints_view.ProjectBlueprints.as_view('project_blueprints'),
+    methods=["GET"]
 )

@@ -8,7 +8,7 @@ from app.core.os_platforms.base import BaseOS
 from app.core.errors import (MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists, 
                              MachineDoesNotExist, MissingProjectFields, ProjectDoesNotExist)
 from app.features.vscode.command import launch_vscode
-from app.features.docker_manager.blueprints.base_blueprint import BLUEPRINT_REGISTRY
+from app.features.docker_manager.blueprints.base_blueprint import BLUEPRINT_REGISTRY, BLUEPRINT_STRUCTURES
 OS_HANDLERS = {
         "windows" : WindowsOS(),
         "linux" : LinuxOS()
@@ -186,7 +186,6 @@ class MachineManager:
     @staticmethod
     def get_projects():
         projects = db.session.execute(select(Project)).scalars()
-        print(BLUEPRINT_REGISTRY)
         return  ProjectSchema(many=True).dump(projects)
     
     def stop_project(id):
@@ -217,12 +216,12 @@ class MachineManager:
             raise MissingProjectFields(message="Missing recipe and machine(s) selection")
         
         recipe_obj = BLUEPRINT_REGISTRY[recipe]
-
+     
         machines_cleaned = Project.hydrate_machines(machines)
        
-        # machines_cleaned.append({"machine": machine, "role": machine_config['role']})
+ 
         result = recipe_obj().create(name, env, images, machines_cleaned)
-      
+
         new_project = Project(
             name=name,
             strategy_type=recipe,
@@ -250,6 +249,8 @@ class MachineManager:
         return {}
     
 
+    def get_blueprints():
+        return [BLUEPRINT_STRUCTURES[k] for k in BLUEPRINT_STRUCTURES]
 
         
 

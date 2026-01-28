@@ -14,7 +14,7 @@ export interface AddProjectRequest {
     recipe: string
     images: string[]
     machines: {id: number, role: string}[]
-    env: {key: string, value: string}[]
+    env: {key: string, value: string}
 
 }
 

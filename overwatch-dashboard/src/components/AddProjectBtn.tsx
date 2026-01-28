@@ -1,56 +1,43 @@
-import { useState } from "react"
-import { DisplayFormBtn, type FormField } from "./DisplayFormBtn"
-import { type AddProjectRequest, type IProject } from "../types/projects";
+import { ProjectForm, type BlueprintProps, type FormField } from "./DisplayFormBtn"
 import { CustomApiRequest, type AddProjectResponse } from "../FetchAPI";
+import type { IMachine } from "../types/machines";
 
 
 interface ProjectFormProps {
-    projects: IProject[] | null
+    availableMachines: IMachine[] | null
+    projectBlueprints: BlueprintProps[] | null
 }
 
-export const AddProjectBtn = ({projects} : ProjectFormProps) =>{
-    const [error, setError] = useState<string | null>(null);
-    const [formData, setFormData] = useState<AddProjectRequest>({
-        name: "",
-        recipe: "",
-        env: [],
-        images: [],
-        machines: []
-    })
-
-    const projectOptions = projects?.map(project => ({label: project.name, value: project.name}));
+export const AddProjectBtn = ({availableMachines, projectBlueprints} : ProjectFormProps) =>{
+    const machineOptions = availableMachines?.map(machine => ({label: machine.address, value: machine.id}))
     const AddProjectFormFields: FormField[] = [
         {name: "name", label: "Project Name", formType: "text", placeholder: "MyFirstProject"},
-        {name: "recipe", label: "recipe", formType: "select", options: projectOptions, placeholder: "test"},
+        // {name: "recipe", label: "recipe", formType: "select", options: projectOptions, placeholder: "test"},
         {name: "env", label: "env", formType: "text", placeholder: "environment variables"},
         {name: "images", label:"images", formType: "text", placeholder: "docker images"},
-        {name: "machines", label: "machines", formType: "text", placeholder :"machine(s) to deploy to"}
+        {name: "machines", label: "machines", formType: "select", isMultiSelectForm: true, options: machineOptions, placeholder :"machine(s) to deploy to"}
     ]
 
-    const handleChange = (e: React.ChangeEvent<any>) => {
-        const { name, value } = e.target;   
-        setFormData(
-            prev => ({
-            ...prev,
-            [name]: name === 'port' ?  parseInt(value) || 22 : value
-            })
-        );
-    };
 
-    const handleSubmit = (e : React.ChangeEvent<any>) =>
+    const handleSubmit = (e : React.ChangeEvent<any>, payload: any) =>
     {   
         e.preventDefault()
-        CustomApiRequest<AddProjectResponse>('projects', formData, "POST")
+        return CustomApiRequest<AddProjectResponse>('projects', payload, "POST")
         .then((response) =>{
             console.log("added project", response.data)
+            return null
         })
         .catch((err) =>{
-            setError((err as Error).message);
+            return (err as Error).message;
         });
 
     }
 
     return (<>
-        <DisplayFormBtn title={"Add Project"} onSubmit={handleSubmit} error={error} onChange={handleChange} formFields={AddProjectFormFields}/>
+        {machineOptions && projectBlueprints
+        ? <ProjectForm machineOptions={machineOptions} blueprints={projectBlueprints} onSubmit={handleSubmit}/>
+        : <></>
+        }
+         
     </>)
 }

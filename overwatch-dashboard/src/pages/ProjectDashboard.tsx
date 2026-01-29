@@ -11,15 +11,63 @@ interface ProjectTableProps{
   projects: IProject[] | null
 }
 
-const ProjectTable = ({projects}: ProjectTableProps) => {
+interface MyProps {
+  id: number
+}
 
+// Update this after adding the is_running attribute to the project schema
+const ProjectRowControls = ({id}: MyProps) => {
+  const [isStarted, setIsStarted] = useState<boolean>(false)
+
+
+  const startProjectBtn = async () => {
+    try{
+       const result = await CustomApiRequest<GetAllProjectsResponse>(`projects/${id}/start`, null, "POST");
+       if (result.message === "OK")
+       {
+          setIsStarted(true)
+       }
+    } catch(err) {
+
+    }
+  }
+
+  const stopProjectBtn = async () => {
+    try{
+       const result = await CustomApiRequest<GetAllProjectsResponse>(`projects/${id}/stop`, null, "POST");
+       if (result.message === "OK")
+       {
+          setIsStarted(false)
+       }
+    } catch(err) {
+
+    }
+  }
+
+  const removeProject = async () => {
+     try{
+       const result = await CustomApiRequest<GetAllProjectsResponse>(`projects/${id}`, null, "DELETE");
+       console.log(result);
+    } catch(err) {
+
+    }
+  }
+
+  return (<>
+    <div className="d-flex gap-3 align-items-center">
+      <Button onClick={startProjectBtn}>{isStarted ? "stop" : "start"}</Button>
+      <Button onClick={stopProjectBtn}>stop</Button><Button onClick={removeProject}>delete</Button>
+    </div>
+  </>);
+}
+
+const ProjectTable = ({projects}: ProjectTableProps) => {
   return (
   <Table striped hover>
     <thead>
       <tr>
         <th>Name</th>
         <th>Strategy</th>
-        <th>Command</th>
         <th>Command</th>
       </tr>
     </thead>
@@ -29,8 +77,7 @@ const ProjectTable = ({projects}: ProjectTableProps) => {
           <td>{project.name}</td>
           <td>{project.strategy_type}</td>
           
-          <td> <div className="d-flex gap-3 align-items-center"><Button>Start</Button><Button>Restart</Button></div></td>
-          <td>dummy</td>
+          <td> <ProjectRowControls id={project.id} /></td>
         </tr>
       )}
     </tbody>

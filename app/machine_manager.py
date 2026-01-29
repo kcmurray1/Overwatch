@@ -188,6 +188,7 @@ class MachineManager:
         projects = db.session.execute(select(Project)).scalars()
         return  ProjectSchema(many=True).dump(projects)
     
+    # FIXME: maybe return a receipt? FOr example to let user know what was shutdown and what wasn't in case of failure
     def stop_project(id):
         project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
         if not project:
@@ -218,7 +219,7 @@ class MachineManager:
         recipe_obj = BLUEPRINT_REGISTRY[recipe]
      
         machines_cleaned = Project.hydrate_machines(machines)
-       
+        print("cleaned machines before adding project")
  
         result = recipe_obj().create(name, env, images, machines_cleaned)
 
@@ -229,7 +230,7 @@ class MachineManager:
         db.session.add(new_project)
         db.session.flush()
         new_project.config = {"env": env, "machines": machines, "images": images}
-        print(result)
+        print("saving..", result)
         new_project.deployment_metadata = {"machines" : result}
         
         db.session.commit()
@@ -243,10 +244,8 @@ class MachineManager:
             raise ProjectDoesNotExist
         # FIXME: check if invalid blueprint key
         blueprint_obj = BLUEPRINT_REGISTRY.get(project.strategy_type)
-        updated_machines = Project.hydrate_machines(project.deployment_metadata['machines']) 
+        updated_machines = Project.hydrate_machines(project.deployment_metadata['machines'])
         blueprint_obj().start(updated_machines)
-
-        return {}
     
 
     def get_blueprints():

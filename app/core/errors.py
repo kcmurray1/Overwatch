@@ -5,7 +5,8 @@ def response_template(status, message, data=None):
 
 def unexpected_error(error):
     print(f"Unexpected error {str(error)}")
-    return response_template(500, "An Internal server error occured")
+    return response_template(500, str(error))
+    # return response_template(500, "An Internal server error occured")
 
 def handle_api_error(error):
     return response_template(error.status_code, error.message)

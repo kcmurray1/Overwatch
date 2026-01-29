@@ -5,6 +5,7 @@ services:
       - KEY_PATH=/app/secrets/id_ecdsa
     volumes:
       - ${KEY_PATH}:/app/secrets/id_ecdsa:ro
+      - //var/run/docker.sock:/var/run/docker.sock
   frontend:
     build: ./overwatch-dashboard
     ports:

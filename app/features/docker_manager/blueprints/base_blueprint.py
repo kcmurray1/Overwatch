@@ -1,8 +1,8 @@
 BLUEPRINT_REGISTRY = {}
 BLUEPRINT_STRUCTURES = {}
 import docker
-
-class BaseBlueprint:
+from abc import ABC, abstractmethod
+class BaseBlueprint(ABC):
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -10,16 +10,17 @@ class BaseBlueprint:
         BLUEPRINT_STRUCTURES[cls.__name__] = cls.get_structure(cls) if cls.get_structure(cls) else {"name": cls.__name__}
         BLUEPRINT_REGISTRY[cls.__name__] = cls
 
+    @abstractmethod
     def get_structure(self):
         pass
-
+    
     def get_client(self, machine_obj):
         """return DockerClient after establishing SSH connection remote machine\n
            :NOTE: This will not function if the target device and client device do not have
            SSH authentication setup
         """
         return docker.DockerClient(base_url=f"ssh://{machine_obj.user}@{machine_obj.address}:{machine_obj.port}", use_ssh_client=True)
-        
+    
     def start(self, deployment_metadata):
         """Run docker container(s) on targeted machine(s), subclass must define this as environment variables, images, and the number
         of machines vary.
@@ -30,6 +31,7 @@ class BaseBlueprint:
             project_container = docker_client.containers.get(machine['container_id'])
             project_container.start()
     
+    @abstractmethod
     def create(self, container_name, environment, images, machines):
         """Create and push docker container provided the image, environment variables and name for the container.
            Each project is unique and may require this method to be overridden

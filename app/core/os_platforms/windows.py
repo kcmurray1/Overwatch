@@ -44,3 +44,6 @@ class WindowsOS(BaseOS):
     
     def stop(self, exec_fun):
         pass
+
+    def install_tailscale(self, exec_func, hostname, access_token):
+        return None

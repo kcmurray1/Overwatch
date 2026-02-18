@@ -40,3 +40,7 @@ class BaseOS(ABC):
     def stop(self, exec_func):
         """Stop machine"""
         pass
+
+    @abstractmethod
+    def install_tailscale(self, exec_func, hostname, access_token):
+        return NotImplementedError

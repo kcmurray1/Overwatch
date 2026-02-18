@@ -15,7 +15,7 @@ export type AddProjectResponse = APIResponse<IProject>;
 export type GetAllProjectsResponse = APIResponse<IProject[]>;
 export type GetProjectBlueprintsResponse = APIResponse<BlueprintProps[]>;
 
-const BASE_URL = "api/v2";
+const BASE_URL = "http://localhost:5000/api/v2";
 
 export async function CustomApiRequest<T>(endpoint: string, data: any | null, method: string) : Promise<T>
 {

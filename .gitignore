@@ -8,6 +8,8 @@ __pycache__/
 
 migrations/
 
+experiment/
+
 # Distribution / packaging
 .Python
 build/

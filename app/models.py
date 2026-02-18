@@ -42,6 +42,9 @@ class Machine(db.Model):
 
     projects: Mapped[List["Project"]] = relationship(secondary=machine_project, back_populates="machines")
 
+    tailscale_ip: Mapped[str] = mapped_column(nullable=True)
+    
+
 
     def __repr__(self):
         return f"{self.user} running {self.os} address: {self.address}"

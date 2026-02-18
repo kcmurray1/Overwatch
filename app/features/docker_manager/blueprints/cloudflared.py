@@ -4,28 +4,33 @@ Docstring for app.features.docker_manager.strategies.cloudflared
 """
 from .base_blueprint import BaseBlueprint
 from app.models import Machine
-import docker
+from docker.errors import ImageNotFound
 from dotenv import load_dotenv
 import os
 
 class CloudFlaredBlueprint(BaseBlueprint):
 
     DEFAULT_IMAGE= "cloudflare/cloudflared:latest"
-    def deploy(self, container_name, environment, images, machines):
-        load_dotenv()
-        deployment_metadata = {"machines": []}
-        token = environment.get("token", os.environ.get("MY_TOKEN"))
-        machine, = machines
-        machine_obj = machine['machine']
-        try:
-            image, = images
-        except ValueError:
-            image = self.DEFAULT_IMAGE
-       
-        client = self.get_client(machine_obj.address, machine_obj.user, machine_obj.port)
 
-       
-        client_container = client.containers.run(
+    def get_structure(self):
+        return {"name": self.__name__, "struct": {"machine_roles": [{"name": "cloudflared", "many":False}]}}
+    
+    def create(self, container_name, environment, images, machines):
+        load_dotenv()
+        token = environment.get("token", os.environ.get("MY_TOKEN"))
+
+        machine, = machines
+        machine_obj = machine['machine_object']
+        image = images[0] if images else self.DEFAULT_IMAGE
+
+    
+        client = self.get_client(machine_obj)
+        try:
+            client.images.get(image)
+        except ImageNotFound:
+            client.images.pull(image)
+
+        client_container = client.containers.create(
             image=image,
             name=container_name,
             detach=True,
@@ -33,9 +38,7 @@ class CloudFlaredBlueprint(BaseBlueprint):
             restart_policy={"Name": "always"}
         )
 
-        deployment_metadata['machines'].append({'container_id': client_container.id, 'id': machine_obj.id, 'role': machine['role']})
-
-        return deployment_metadata
+        return [{'container_id': client_container.id, 'id': machine_obj.id, 'role': machine['role']}]
 
 
     

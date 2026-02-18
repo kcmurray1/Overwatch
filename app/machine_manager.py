@@ -8,6 +8,7 @@ from app.core.os_platforms.base import BaseOS
 from app.core.errors import (MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists, 
                              MachineDoesNotExist, MissingProjectFields, ProjectDoesNotExist)
 from app.features.vscode.command import launch_vscode
+from app.features.tailscale_manager.tailscale_manager import TailscaleManager
 from app.features.docker_manager.blueprints.base_blueprint import BLUEPRINT_REGISTRY, BLUEPRINT_STRUCTURES
 OS_HANDLERS = {
         "windows" : WindowsOS(),
@@ -31,11 +32,10 @@ class SSHClientContextManager:
     def execute(self, command):
         _, stdout, stderr = self.client.exec_command(command)
 
-        # Get exit code
         cmd_status = stdout.channel.recv_exit_status()
 
         if cmd_status != 0:
-            print("execute error!")
+            print("execute error!", stderr)
             return stderr.read().decode().strip()
         return stdout.read().decode().strip()
     
@@ -69,63 +69,50 @@ class MachineManager:
         return MachineSchema(many=True).dump(machines)
 
     @staticmethod
-    def get_system_info(ssh_conn, os_handler : BaseOS):
-        def runner(cmd):
-            return MachineManager._execute(ssh_conn, cmd)
-        
-        return os_handler.get_system_info(runner)
-
-    @staticmethod
-    def detect_os(ssh_conn : paramiko.SSHClient):
-        """Run version command for respective OS to determine what OS the connect machine uses"""
-        _, stdout, _ = ssh_conn.exec_command("ver")
-        if stdout.channel.recv_exit_status() == 0:
+    def detect_os(ssh_manager):
+        """
+        Check for OS using the helper's execute method.
+        """
+        if "Microsoft Windows" in ssh_manager.execute("ver"):
             return "windows"
-        _, stdout, _ = ssh_conn.exec_command("uname")
-        if stdout.channel.recv_exit_status() == 0:
+            
+        if ssh_manager.execute("uname") == "Linux":
             return "linux"
-        
-        # machine is not using supported OS
+            
         return None
     
-    @staticmethod 
+    @staticmethod
     def add_machine(address, port, username, keypath):
-        # check if machine with address and port already exists
         machine = db.session.execute(select(Machine).where(Machine.address == address and Machine.port == port)).scalar_one_or_none()
         if machine:
             raise MachineAlreadyExists
         try:
-        
-            client = paramiko.SSHClient()
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            with SSHClientContextManager(address=address, port=port, username=username, keypath=keypath) as sshConn:
+                os_type = MachineManager.detect_os(sshConn)
+    
+                if not os_type:
+                    raise UnsupportedMachineOS
+                         
+                os_handler = OS_HANDLERS.get(os_type)
+                sys_info = os_handler.get_system_info(sshConn.execute)
+                sys_info['os_type'] = os_type
+                sys_info['user'] = username
+                sys_info['port'] = port
+                sys_info['address'] = address
 
-            # verify connection to machine
-            client.connect(address, port=port,  username=username, key_filename=keypath)
-            
-            # figure out basic static information (cpu, os, os_type[windows or not], )
-            os_type = MachineManager.detect_os(client)
-
-            if not os_type:
-                raise UnsupportedMachineOS
-            
-            os_handler = OS_HANDLERS.get(os_type)
-
-            sys_info = MachineManager.get_system_info(ssh_conn=client, os_handler=os_handler)
-            sys_info['os_type'] = os_type
-            sys_info['user'] = username
-            sys_info['port'] = port
-            sys_info['address'] = address
-            # add to database upon successful connection
-            new_machine = MachineSchema().load(data=sys_info, session=db.session)
-
-            
-            db.session.add(new_machine)
-            db.session.commit()
-            return sys_info
+                # install tailscale(add to tailnet)
+                ts = TailscaleManager(tags=["tag:dashboard-node"])
+                sys_info['tailscale_ip'] = ts.add_to_tailnet(ssh_conn=sshConn, os_handler=os_handler, hostname=username)
+                
+                new_machine = MachineSchema().load(data=sys_info, session=db.session)
+      
+                db.session.add(new_machine)
+                db.session.commit()
+                return sys_info
         except TimeoutError:
             raise MachineConnectionError
-        finally:
-            client.close() 
+
+        
     @staticmethod
     def remove_machine(machine_id):
         db.session.execute(delete(Machine).where(Machine.id == machine_id))

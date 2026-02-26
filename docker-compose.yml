@@ -1,13 +1,20 @@
 services:
   app:
-    build: ./app
+    # build: ./app
+    image: overwatch-app:v1
+    env_file:
+      - .env
+    user: root
     environment:
       - KEY_PATH=/app/secrets/id_ecdsa
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DOCKER_SSH_SKIP_HOST_KEY_CHECK=1
     volumes:
-      - ${KEY_PATH}:/app/secrets/id_ecdsa:ro
-      - //var/run/docker.sock:/var/run/docker.sock
+      - ${KEY_PATH}:/app/secrets/id_ecdsa
+      - /var/run/docker.sock:/var/run/docker.sock
   frontend:
-    build: ./overwatch-dashboard
+    # build: ./overwatch-dashboard
+    image: overwatch-frontend:v1
     ports:
       - "80:80"
     depends_on:

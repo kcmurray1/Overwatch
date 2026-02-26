@@ -21,11 +21,8 @@ class ProjectRecord(MethodView):
     def get(self, id):
         return MachineManager.get_project(id)
     
-    # FIXME: only removes from datbase does not perform stop() for the project
     def delete(self, id):
-        MachineManager.stop_project(id)
         removed_project = MachineManager.remove_project(id)
-
         return response_template(200, "OK", removed_project)
 
 
@@ -33,7 +30,8 @@ class ProjectRecord(MethodView):
 class ProjectAction(MethodView):
     def post(self, id, action):
         if action == "stop":
-            return MachineManager.stop_project(id)
+            MachineManager.stop_project(id)
+            return response_template(200, "OK")
             
         if action == "start":
             print("starting")

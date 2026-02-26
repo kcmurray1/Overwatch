@@ -23,5 +23,6 @@ export interface IProject {
     name: string
     strategy_type: string
     config: deployment_data
+    is_running: boolean
 }
 

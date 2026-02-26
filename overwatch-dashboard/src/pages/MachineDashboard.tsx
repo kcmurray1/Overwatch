@@ -28,7 +28,7 @@ export const MachineDashboard = () => {
     
     loadData();
 
-    const intervalId = setInterval(loadData, 10000);
+    const intervalId = setInterval(loadData, 5000);
 
     return () => clearInterval(intervalId);
   }, [])

@@ -12,16 +12,28 @@ class DockerRegistryBlueprint(BaseBlueprint):
         machine, = machines
         machine_obj = machine['machine_object']
         image = images[0] if images else self.DEFAULT_REGISTRY_IMAGE
-
-        port_binding = {"5000/tcp": (machine.tailscale_ip, 5000) if machine.tailscale_ip else environment.get("port", self.DEFAULT_REGISTRY_PORT)}
-        
+        print("creating registry port..", flush=True)
+        port_binding = {"5000/tcp": (machine_obj.tailscale_ip, 5000) if machine_obj.tailscale_ip else environment.get("port", self.DEFAULT_REGISTRY_PORT)}
+        print("done binding...", flush=True)
+        volumes_config = {
+            f"/var/lib/docker-registry/{container_name}": {
+                'bind': '/var/lib/registry',
+                'mode': 'rw'                 
+            }
+        }
+        print("getting client...", flush=True)
         client = self.get_client(machine_obj)
+        print("creating registry..", flush=True)
         client_container = client.containers.create(
             image=image,
             name=f'{container_name}-registry',
             detach=True,
             restart_policy={"Name": "always"},
-            ports = port_binding
+            volumes=volumes_config,
+            ports = port_binding,
+            environment={
+                "REGISTRY_STORAGE_DELETE_ENABLED": "true"
+            }
         )
 
         return [{'container_id': client_container.id, 'id': machine_obj.id, 'role': machine['role']}]

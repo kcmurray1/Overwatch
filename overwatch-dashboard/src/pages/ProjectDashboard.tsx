@@ -9,23 +9,23 @@ import type { BlueprintProps } from '../components/DisplayFormBtn'
 
 interface ProjectTableProps{
   projects: IProject[] | null
+  onUpdate: () => void
 }
 
 interface MyProps {
   id: number
+  isRunning: boolean
+  onUpdate: () => void
 }
 
-// Update this after adding the is_running attribute to the project schema
-const ProjectRowControls = ({id}: MyProps) => {
-  const [isStarted, setIsStarted] = useState<boolean>(false)
 
-
+const ProjectRowControls = ({id, isRunning, onUpdate}: MyProps) => {
   const startProjectBtn = async () => {
     try{
        const result = await CustomApiRequest<GetAllProjectsResponse>(`projects/${id}/start`, null, "POST");
        if (result.message === "OK")
        {
-          setIsStarted(true)
+         onUpdate();
        }
     } catch(err) {
 
@@ -37,7 +37,7 @@ const ProjectRowControls = ({id}: MyProps) => {
        const result = await CustomApiRequest<GetAllProjectsResponse>(`projects/${id}/stop`, null, "POST");
        if (result.message === "OK")
        {
-          setIsStarted(false)
+        onUpdate();
        }
     } catch(err) {
 
@@ -47,6 +47,7 @@ const ProjectRowControls = ({id}: MyProps) => {
   const removeProject = async () => {
      try{
        const result = await CustomApiRequest<GetAllProjectsResponse>(`projects/${id}`, null, "DELETE");
+       onUpdate();
        console.log(result);
     } catch(err) {
 
@@ -55,13 +56,13 @@ const ProjectRowControls = ({id}: MyProps) => {
 
   return (<>
     <div className="d-flex gap-3 align-items-center">
-      <Button onClick={startProjectBtn}>{isStarted ? "stop" : "start"}</Button>
-      <Button onClick={stopProjectBtn}>stop</Button><Button onClick={removeProject}>delete</Button>
+      {isRunning ? <Button onClick={stopProjectBtn}>stop</Button> : <Button onClick={startProjectBtn}>start</Button>}
+      <Button onClick={removeProject}>delete</Button>
     </div>
   </>);
 }
 
-const ProjectTable = ({projects}: ProjectTableProps) => {
+const ProjectTable = ({projects, onUpdate}: ProjectTableProps) => {
   return (
   <Table striped hover>
     <thead>
@@ -77,7 +78,7 @@ const ProjectTable = ({projects}: ProjectTableProps) => {
           <td>{project.name}</td>
           <td>{project.strategy_type}</td>
           
-          <td> <ProjectRowControls id={project.id} /></td>
+          <td> <ProjectRowControls id={project.id} isRunning={project.is_running} onUpdate={onUpdate} /></td>
         </tr>
       )}
     </tbody>
@@ -92,23 +93,22 @@ export const ProjectDashboard = () => {
   const [loading, setLoading] = useState(true);
   const[error, setError] = useState<string | null>(null);
   
-  useEffect(()=>{
-
-    const fetchData = async () =>{
-      try {
-        setLoading(true);
-        const projects = await CustomApiRequest<GetAllProjectsResponse>('projects', null, "GET");
-        const projectBlueprints = await CustomApiRequest<GetProjectBlueprintsResponse>('blueprints', null, "GET");
-        const machines = await CustomApiRequest<GetAllMachinesResponse>('machines', null,"GET");
-        setProjects(projects.data);
-        setProjectBlueprints(projectBlueprints.data)
-        setMachines(machines.data)
-      } catch (err) {
-        setError((err as Error).message)
-      } finally {
-        setLoading(false)
-      }
+  const fetchData = async () =>{
+    try {
+      console.log("fetching...")
+      const projects = await CustomApiRequest<GetAllProjectsResponse>('projects', null, "GET");
+      const projectBlueprints = await CustomApiRequest<GetProjectBlueprintsResponse>('blueprints', null, "GET");
+      const machines = await CustomApiRequest<GetAllMachinesResponse>('machines', null,"GET");
+      setProjects(projects.data);
+      setProjectBlueprints(projectBlueprints.data)
+      setMachines(machines.data)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setLoading(false)
     }
+  }
+  useEffect(()=>{
     fetchData();
   }, [])
 
@@ -123,7 +123,7 @@ export const ProjectDashboard = () => {
   
       </Row>
       <Row>
-      <ProjectTable projects={projects}/>
+      <ProjectTable projects={projects} onUpdate={fetchData}/>
       </Row>
     </Container>    
     </>

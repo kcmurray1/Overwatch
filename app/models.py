@@ -69,16 +69,19 @@ class Project(db.Model):
     
     machines: Mapped[List["Machine"]] = relationship(secondary=machine_project, back_populates="projects")
 
+    is_running: Mapped[bool] = mapped_column(default=False)
+
     @staticmethod
     def hydrate_machines(machines):
+        """Return a list of Machine database models given a list of Machine table id's"""
         machine_ids = [m['id'] for m in machines]
         machine_objects = {m.id: m for m in db.session.execute(select(Machine).where(Machine.id.in_(machine_ids))).scalars().all()}
         updated_machines = []
 
         for machine_metadata in machines:
-            idk = machine_metadata.copy()
-            idk['machine_object'] = machine_objects[machine_metadata['id']]
-            updated_machines.append(idk)
+            machine_copy = machine_metadata.copy()
+            machine_copy['machine_object'] = machine_objects[machine_metadata['id']]
+            updated_machines.append(machine_copy)
         return updated_machines
 
     def __repr__(self):

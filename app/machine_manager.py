@@ -104,6 +104,7 @@ class MachineManager:
                 ts = TailscaleManager(tags=["tag:dashboard-node"])
                 sys_info['tailscale_ip'] = ts.add_to_tailnet(ssh_conn=sshConn, os_handler=os_handler, hostname=username)
                 
+                print("adding to database...", flush=True)
                 new_machine = MachineSchema().load(data=sys_info, session=db.session)
       
                 db.session.add(new_machine)
@@ -185,6 +186,8 @@ class MachineManager:
         
         machine_objects = Project.hydrate_machines(project.deployment_metadata['machines'])
         result = recipe().stop(machine_objects)
+        project.is_running = False
+        db.session.commit()
         return {}
     
     def get_project(id):
@@ -194,8 +197,17 @@ class MachineManager:
         return ProjectSchema().dump(project)
     
     def remove_project(id):
+        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
+        if not project:
+            return ProjectDoesNotExist
+        
+        recipe = BLUEPRINT_REGISTRY[project.strategy_type]
+        
+        machine_objects = Project.hydrate_machines(project.deployment_metadata['machines'])
+        result = recipe().remove(machine_objects)
         db.session.execute(delete(Project).where(Project.id == id))
         db.session.commit()
+        return {}
 
     @staticmethod
     def add_project(env, machines, images, recipe, name):
@@ -229,10 +241,16 @@ class MachineManager:
 
         if not project:
             raise ProjectDoesNotExist
-        # FIXME: check if invalid blueprint key
+        
         blueprint_obj = BLUEPRINT_REGISTRY.get(project.strategy_type)
+        if not blueprint_obj:
+            # FIXME: check if invalid blueprint key
+            pass
         updated_machines = Project.hydrate_machines(project.deployment_metadata['machines'])
         blueprint_obj().start(updated_machines)
+
+        project.is_running = True
+        db.session.commit()
     
 
     def get_blueprints():

@@ -21,8 +21,21 @@ def create_app():
     app.register_error_handler(ProjectError, project_error)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///machines.db"
-    app.config['KEY_PATH'] = os.environ.get("KEY_PATH")
+    key_path = os.getenv('KEY_PATH')
 
+    ssh_config_path = "/root/.ssh/config"
+    os.makedirs("/root/.ssh", exist_ok=True)
+    
+    with open(ssh_config_path, "w") as f:
+        f.write(f"""
+            Host *
+                IdentityFile {key_path}
+                StrictHostKeyChecking no
+                UserKnownHostsFile /dev/null
+                IdentitiesOnly yes
+            """)
+    os.chmod(ssh_config_path, 0o600)
+    app.config['KEY_PATH'] = key_path
     CORS(app)
     db.init_app(app)
 

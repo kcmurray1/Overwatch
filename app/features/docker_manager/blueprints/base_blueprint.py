@@ -2,6 +2,8 @@ BLUEPRINT_REGISTRY = {}
 BLUEPRINT_STRUCTURES = {}
 import docker
 from abc import ABC, abstractmethod
+import os
+
 class BaseBlueprint(ABC):
 
     @classmethod
@@ -19,7 +21,10 @@ class BaseBlueprint(ABC):
            :NOTE: This will not function if the target device and client device do not have
            SSH authentication setup
         """
-        return docker.DockerClient(base_url=f"ssh://{machine_obj.user}@{machine_obj.address}:{machine_obj.port}", use_ssh_client=True)
+       
+        print(f"connecting to ssh://{machine_obj.user}@{machine_obj.address}:{machine_obj.port}")
+        return docker.DockerClient(base_url=f"ssh://{machine_obj.user}@{machine_obj.address}:{machine_obj.port}", use_ssh_client=True, version='auto', 
+        timeout=60)
     
     def start(self, deployment_metadata):
         """Run docker container(s) on targeted machine(s), subclass must define this as environment variables, images, and the number
@@ -41,6 +46,24 @@ class BaseBlueprint(ABC):
     def stop(self, machines):
         """
         Stop containers running the select strategy. Expects machines to be have the shape\n 
+        machine = {"machine_object": Machine, "container_id": id, "role": machine_role}\n
+        where machines = [machine_1, machine_2...machine_n]
+        """
+        for machine in machines:
+            machine_obj = machine['machine_object']
+            try:
+                client = self.get_client(machine_obj)
+
+                container = client.containers.get(container_id=machine["container_id"])
+                container.stop()
+                print(f" stopping.. {container.name} on {machine_obj.address}")
+            except Exception as e:
+                print(f"  Could not reach {machine_obj.address}: {str(e)}")   
+
+    def remove(self, machines):
+        """
+        Remove container running on machine(s) associated with a container.\n
+        Expects machines to be have the shape:\n 
         machine = {"machine_object": Machine, "container_id": id, "role": machine_role}\n
         where machines = [machine_1, machine_2...machine_n]
         """

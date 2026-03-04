@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Container, Row, Table, Button} from 'react-bootstrap'
+import { Container, Row, Col, Table, Button, Card} from 'react-bootstrap'
 import { CustomApiRequest, type GetAllMachinesResponse, type GetAllProjectsResponse, type GetProjectBlueprintsResponse } from '../FetchAPI'
 import type { IProject } from '../types/projects'
 import { AddProjectBtn } from '../components/AddProjectBtn'
@@ -95,7 +95,6 @@ export const ProjectDashboard = () => {
   
   const fetchData = async () =>{
     try {
-      console.log("fetching...")
       const projects = await CustomApiRequest<GetAllProjectsResponse>('projects', null, "GET");
       const projectBlueprints = await CustomApiRequest<GetProjectBlueprintsResponse>('blueprints', null, "GET");
       const machines = await CustomApiRequest<GetAllMachinesResponse>('machines', null,"GET");
@@ -119,11 +118,26 @@ export const ProjectDashboard = () => {
     <>
     <Container fluid>
       <Row md={12}>
-        <AddProjectBtn projectBlueprints={projectBlueprints} availableMachines={machines}/>
-  
+        <Col>
+         <Card className="mb-4 shadow-sm">
+              <Card.Header>Project Controls</Card.Header>
+              <Card.Body>
+                  {/* d-flex: makes it a flex container */}
+                  {/* gap-3: adds consistent space between items */}
+                  {/* align-items-center: vertically centers the buttons */}
+                  <div className="d-flex gap-3 align-items-center">
+
+                    <AddProjectBtn projectBlueprints={projectBlueprints} availableMachines={machines}/>
+                      {/* Use ms-auto (margin-start: auto) to push items to the far right */}
+                  </div>
+              </Card.Body>
+          </Card>
+          </Col>
       </Row>
       <Row>
-      <ProjectTable projects={projects} onUpdate={fetchData}/>
+        <Col>
+        <ProjectTable projects={projects} onUpdate={fetchData}/>
+        </Col>
       </Row>
     </Container>    
     </>

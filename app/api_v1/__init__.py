@@ -19,9 +19,9 @@ api_bp.add_url_rule(
     methods=["GET","DELETE"]
 )
 api_bp.add_url_rule(
-    "/machines/<int:id>/<any(restart, stop, add_project, openvs):action>",
+    "/machines/<int:id>/<any(restart, stop, add_project, openvs, usage):action>",
     view_func=machine_view.MachineAction.as_view('machine_action'),
-    methods=["POST"]
+    methods=["POST", "GET"]
 )
 api_bp.add_url_rule(
     "/projects",

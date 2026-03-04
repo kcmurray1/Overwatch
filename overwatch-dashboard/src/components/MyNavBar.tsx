@@ -12,10 +12,13 @@ export const MyNavBar: React.FC = () =>{
                  <Nav.Item>
                     <Nav.Link href="/projects">Projects</Nav.Link>
                 </Nav.Item>
+                <Nav.Item>
+                    <Nav.Link href="/services">Sevices</Nav.Link>
+                </Nav.Item>
             </Nav>
             
             <hr />
-            <div className="text-muted small">v0.1</div>
+            <div className="text-muted small">v1.1.1</div>
         </div>
     );
 }

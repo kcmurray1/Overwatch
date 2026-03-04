@@ -1,7 +1,7 @@
 services:
   app:
-    # build: ./app
-    image: overwatch-app:v1
+    build: ./app
+    # image: ${REGISTRY_HOST}/overwatch-app:v1.1.1
     env_file:
       - .env
     user: root
@@ -13,8 +13,8 @@ services:
       - ${KEY_PATH}:/app/secrets/id_ecdsa
       - /var/run/docker.sock:/var/run/docker.sock
   frontend:
-    # build: ./overwatch-dashboard
-    image: overwatch-frontend:v1
+    build: ./overwatch-dashboard
+    # image: ${REGISTRY_HOST}/overwatch-frontend:v1.1.1
     ports:
       - "80:80"
     depends_on:

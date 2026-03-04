@@ -25,6 +25,7 @@ class MachineCollection(MethodView):
             raise APIError("Invalid Machine details")
         new_machine = MachineManager.add_machine(machine_addr, machine_port, machine_user, current_app.config["KEY_PATH"])
         return response_template(status=201, message="created", data=new_machine)
+    
 
 class MachineRecord(MethodView):
     def get(self, id):
@@ -44,5 +45,12 @@ class MachineAction(MethodView):
             URI = MachineManager.open_vscode(id)
             return response_template(status=200, message="ok", data={"link" : URI})
 
-
+        return response_template(200, "ok")
+    
+    def get(self, id, action):
+        if action == "usage":
+            data = MachineManager.get_usage(id)
+            if not data:
+                return response_template(status=404, message='agent not responding')
+            return response_template(status=200, message='ok', data=data)
         return response_template(200, "ok")

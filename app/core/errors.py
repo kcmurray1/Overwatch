@@ -4,7 +4,7 @@ def response_template(status, message, data=None):
     return make_response({"message": message, "data": data}, status)
 
 def unexpected_error(error):
-    print(f"Unexpected error {str(error)}")
+    print(f"Unexpected error {error}")
     return response_template(500, str(error))
     # return response_template(500, "An Internal server error occured")
 

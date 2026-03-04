@@ -2,6 +2,7 @@ import paramiko
 from sqlalchemy import select, delete
 from app.models import db, Machine, Project
 from app.serializer import MachineSchema, ProjectSchema
+from app.core.agent_manager.manager import install_agent
 from app.core.os_platforms.windows import WindowsOS
 from app.core.os_platforms.linux import LinuxOS
 from app.core.os_platforms.base import BaseOS
@@ -10,10 +11,12 @@ from app.core.errors import (MachineConnectionError, UnsupportedMachineOS, Machi
 from app.features.vscode.command import launch_vscode
 from app.features.tailscale_manager.tailscale_manager import TailscaleManager
 from app.features.docker_manager.blueprints.base_blueprint import BLUEPRINT_REGISTRY, BLUEPRINT_STRUCTURES
+import requests
 OS_HANDLERS = {
         "windows" : WindowsOS(),
         "linux" : LinuxOS()
 }
+
 
 # https://www.geeksforgeeks.org/python/context-manager-in-python/
 class SSHClientContextManager:
@@ -35,7 +38,7 @@ class SSHClientContextManager:
         cmd_status = stdout.channel.recv_exit_status()
 
         if cmd_status != 0:
-            print("execute error!", stderr)
+            # print("execute error!", stderr)
             return stderr.read().decode().strip()
         return stdout.read().decode().strip()
     
@@ -103,8 +106,10 @@ class MachineManager:
                 # install tailscale(add to tailnet)
                 ts = TailscaleManager(tags=["tag:dashboard-node"])
                 sys_info['tailscale_ip'] = ts.add_to_tailnet(ssh_conn=sshConn, os_handler=os_handler, hostname=username)
-                
-                print("adding to database...", flush=True)
+
+                # install local reporting agent
+                install_agent(hostname=address, user=username, os_type=os_type, port=port)
+                # print("adding to database...", flush=True)
                 new_machine = MachineSchema().load(data=sys_info, session=db.session)
       
                 db.session.add(new_machine)
@@ -112,6 +117,17 @@ class MachineManager:
                 return sys_info
         except TimeoutError:
             raise MachineConnectionError
+        
+    @staticmethod
+    def get_usage(machine_id):
+        machine = db.session.execute(select(Machine).where(Machine.id==machine_id)).scalar_one_or_none()
+        if not machine:
+            raise MachineDoesNotExist
+        try:
+            res = requests.get(f"http://{machine.tailscale_ip.strip()}:8001")
+            return res.json()
+        except:
+            return None
 
         
     @staticmethod
@@ -160,7 +176,7 @@ class MachineManager:
         cmd_status = stdout.channel.recv_exit_status()
 
         if cmd_status != 0:
-            print("execute error!")
+            # print("execute error!")
             return stderr.read().decode().strip()
         return stdout.read().decode().strip()
     
@@ -218,7 +234,7 @@ class MachineManager:
         recipe_obj = BLUEPRINT_REGISTRY[recipe]
      
         machines_cleaned = Project.hydrate_machines(machines)
-        print("cleaned machines before adding project")
+        # print("cleaned machines before adding project")
  
         result = recipe_obj().create(name, env, images, machines_cleaned)
 
@@ -229,7 +245,7 @@ class MachineManager:
         db.session.add(new_project)
         db.session.flush()
         new_project.config = {"env": env, "machines": machines, "images": images}
-        print("saving..", result)
+        # print("saving..", result)
         new_project.deployment_metadata = {"machines" : result}
         
         db.session.commit()

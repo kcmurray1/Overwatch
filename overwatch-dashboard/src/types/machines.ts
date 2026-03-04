@@ -12,6 +12,27 @@ export interface IMachine {
 }
 
 
+export interface ICapcityStats {
+    total: string
+    used: string
+    free: string
+    percent: string
+}
+
+interface IMemory extends ICapcityStats {
+    available: string
+}
+
+interface IDrive extends ICapcityStats {
+    drive: string
+}
+
+export interface IMachineUsage {
+    cpu: number
+    memory: IMemory
+    drives: IDrive[]
+}
+
 export interface AddMachineRequest {
     address: string
     username: string

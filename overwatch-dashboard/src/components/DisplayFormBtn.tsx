@@ -7,7 +7,6 @@ import { Button, Modal, Form, Container, Alert } from "react-bootstrap";
 import Select from "react-select";
 import { type AddProjectRequest } from "../types/projects";
 
-
 // options field is use for the 'select' formType
 export interface FormField{
     name: string
@@ -28,7 +27,6 @@ interface DisplayFormBtnProps{
     clearError: () => void
 }
 
-
 interface MachineRole{
     name: string
     many: boolean
@@ -43,13 +41,20 @@ export interface BlueprintProps {
     struct: BlueprintStructure
 }
 
-
 interface DynamicProjectFieldProps{
     blueprintstructure: BlueprintStructure,
     machines: {label: string, value: number}[]
     onChange: (e: React.ChangeEvent<any>) => void
 }
 
+interface ProjectFormProps {
+    blueprints: BlueprintProps[] | null
+    machineOptions: {label: string, value: number}[] | null
+    onSubmit: (e: React.ChangeEvent<any>, payload: any) => Promise<string|null>
+}
+/*
+Create a select filed that allows multiple selections or single based on the structure
+*/
 const DynamicProjectField = ({blueprintstructure, machines, onChange} : DynamicProjectFieldProps) =>
 {   
     return (
@@ -72,8 +77,7 @@ const DynamicProjectField = ({blueprintstructure, machines, onChange} : DynamicP
                                         target: { name: role.name, value }
                                     } as any);
                                 }}
-                                />
-                        
+                                />                    
                 </Form.Group>
             })
         }
@@ -81,12 +85,7 @@ const DynamicProjectField = ({blueprintstructure, machines, onChange} : DynamicP
     )
 }
 
-interface ProjectFormProps {
-    blueprints: BlueprintProps[] | null
-    machineOptions: {label: string, value: number}[] | null
-    onSubmit: (e: React.ChangeEvent<any>, payload: any) => Promise<string|null>
-}
-
+// Dynamically generate a form based on a project blueprint
 export const ProjectForm = ({blueprints, machineOptions, onSubmit} : ProjectFormProps) =>{
     const [showForm, setShowForm] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -124,10 +123,10 @@ export const ProjectForm = ({blueprints, machineOptions, onSubmit} : ProjectForm
         images: formData.images,
         machines: [] as any[]
         };
-         
+        
+        // Create different field for each role
         activeBlueprint?.struct.machine_roles.forEach(role => {
             const valueInForm = (formData as any)[role.name];
-
             if(valueInForm) {
                 if(Array.isArray(valueInForm)) {
                     const formattedMachine = valueInForm.map(id => ({
@@ -139,7 +138,6 @@ export const ProjectForm = ({blueprints, machineOptions, onSubmit} : ProjectForm
                 else {
                     payload.machines.push({"id": valueInForm, role: role.name});
                 }
-                
             }
         })
         const error = await onSubmit(e, payload);
@@ -147,12 +145,8 @@ export const ProjectForm = ({blueprints, machineOptions, onSubmit} : ProjectForm
             setError(error);
         }
         else{
-            handleClose();
-            
+            handleClose(); 
         }
-
-
-        
     } 
 
     const handleChange = (e: React.ChangeEvent<any>) => {
@@ -166,8 +160,7 @@ export const ProjectForm = ({blueprints, machineOptions, onSubmit} : ProjectForm
         );
     };
     return (<>
-        <Container>
-            <Button variant="outline-primary" onClick={handleShowForm}>sup</Button>
+            <Button variant="outline-primary" onClick={handleShowForm}>Deploy</Button>
             
             <Modal show={showForm} onHide={handleClose}>
                 {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
@@ -211,12 +204,14 @@ export const ProjectForm = ({blueprints, machineOptions, onSubmit} : ProjectForm
                 </Modal.Footer>  
                 </Form>
             </Modal>
-        </Container>
-       
+
     </>)
 }
 
-// inferred return type whereas explicit is the React.FC<> way
+/*
+inferred return type whereas explicit is the React.FC<> way
+Currently used by AddMachine in the MachineDashboard
+*/
 export const DisplayFormBtn = ({formData, formFields, title, onSubmit, onChange, error, clearError}: DisplayFormBtnProps) => {
     const [show, setShow] = useState(false);
     const handleClose = () => {
@@ -226,15 +221,11 @@ export const DisplayFormBtn = ({formData, formFields, title, onSubmit, onChange,
     const handleShow = () => setShow(true);
     
     const handleSubmit = async (e: React.FormEvent)=> {
-        e.preventDefault()
-    
+        e.preventDefault()  
         const isSuccess = await onSubmit(e)
-
         if (isSuccess) {
             handleClose()
         }
-     
-       
     }
 
     return (

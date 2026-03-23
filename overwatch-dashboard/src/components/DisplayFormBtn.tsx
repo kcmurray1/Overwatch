@@ -92,7 +92,7 @@ export const ProjectForm = ({blueprints, machineOptions, onSubmit} : ProjectForm
     const [activeBlueprint, setActiveBlueprint] = useState<BlueprintProps | null>(null);
     const [formData, setFormData] = useState<AddProjectRequest>({
         name: "",
-        recipe: "",
+        template: "",
         env: {"key": "", "value":""},
         images: [],
         machines: []
@@ -105,7 +105,7 @@ export const ProjectForm = ({blueprints, machineOptions, onSubmit} : ProjectForm
         setActiveBlueprint(null);
         setFormData({
         name: "",
-        recipe: "",
+        template: "",
         env: {"key": "", "value":""},
         images: [],
         machines: []
@@ -118,7 +118,7 @@ export const ProjectForm = ({blueprints, machineOptions, onSubmit} : ProjectForm
         e.preventDefault()
         const payload = {
         name: formData.name,
-        recipe: formData.recipe,
+        template: formData.template,
         env: formData.env,
         images: formData.images,
         machines: [] as any[]
@@ -189,7 +189,7 @@ export const ProjectForm = ({blueprints, machineOptions, onSubmit} : ProjectForm
                                 setActiveBlueprint(found);
                                 setFormData(prev => ({
                                 ...prev,
-                                recipe: selected?.value || ""
+                                template: selected?.value || ""
                                 }));
                             }           
                         }}

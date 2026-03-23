@@ -1,16 +1,15 @@
-BLUEPRINT_REGISTRY = {}
-BLUEPRINT_STRUCTURES = {}
 import docker
 from abc import ABC, abstractmethod
-import os
+from docker.errors import ImageNotFound
 
-class BaseBlueprint(ABC):
-
+class BaseTemplate(ABC):
+    _registry = {}
+    _structures = {}
     @classmethod
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        BLUEPRINT_STRUCTURES[cls.__name__] = cls.get_structure(cls) if cls.get_structure(cls) else {"name": cls.__name__}
-        BLUEPRINT_REGISTRY[cls.__name__] = cls
+        cls._structures[cls.__name__] = cls.get_structure(cls) if cls.get_structure(cls) else {"name": cls.__name__}
+        cls._registry[cls.__name__] = cls
 
     @abstractmethod
     def get_structure(self):
@@ -43,6 +42,31 @@ class BaseBlueprint(ABC):
         """
         raise NotImplementedError
     
+    def create_helper(self, container_configs):
+        #NOTE: have the create wrapper assign images to machines per role
+
+        created_containers = []
+        for container_config in container_configs:
+            machine_obj = container_config['machine_object']
+            machine_role = container_config['machine_role']
+            
+            docker_client = self.get_client(machine_obj)
+            
+            config = container_config['config']
+
+            machine_image = config['image']
+            try:
+                docker_client.images.get(machine_image)
+            except ImageNotFound:
+                docker_client.images.pull(machine_image)
+                # maybe try to get image again to verify on machine otherwise throw error
+            
+            client_container = docker_client.containers.create(**config)
+
+            created_containers.append(self.get_receipt(container=client_container, machine_obj=machine_obj, machine_role=machine_role))
+        
+        return created_containers
+
     def stop(self, machines):
         """
         Stop containers running the select strategy. Expects machines to be have the shape\n 
@@ -77,3 +101,16 @@ class BaseBlueprint(ABC):
                 print(f" Removed {container.name} from {machine_obj.address}")
             except Exception as e:
                 print(f"  Could not reach {machine_obj.address}: {str(e)}")   
+
+    def get_receipt(self, container, machine_obj, machine_role):
+        port_bindings = container.attrs['HostConfig']['PortBindings']
+        
+        network = {}
+        for protocol in port_bindings:
+            network['protocol'] = protocol
+
+            for hostbinding in port_bindings[protocol]:
+                network['host'] = hostbinding['HostIp']
+                network['port'] = hostbinding['HostPort']
+
+        return {'container_id': container.id, 'id': machine_obj.id, 'role': machine_role, 'network': network}

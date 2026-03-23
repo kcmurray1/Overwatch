@@ -64,12 +64,15 @@ const ProjectRowControls = ({id, isRunning, onUpdate}: MyProps) => {
 
 const ProjectTable = ({projects, onUpdate}: ProjectTableProps) => {
   return (
+
   <Table striped hover>
     <thead>
       <tr>
         <th>Name</th>
         <th>Strategy</th>
+     
         <th>Command</th>
+        
       </tr>
     </thead>
     <tbody>

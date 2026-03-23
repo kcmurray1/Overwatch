@@ -1,9 +1,8 @@
 from flask.views import MethodView
-from app.machine_manager import MachineManager
+from app.extensions import docker_orchestrator
 from app.core.errors import response_template
 
 class ProjectBlueprints(MethodView):
     def get(self):
-        blueprints = MachineManager.get_blueprints()
-
+        blueprints = docker_orchestrator.get_blueprints()
         return response_template(200, "ok", blueprints)

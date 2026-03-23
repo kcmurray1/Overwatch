@@ -10,7 +10,6 @@ from app.core.errors import (MachineConnectionError, UnsupportedMachineOS, Machi
                              MachineDoesNotExist, MissingProjectFields, ProjectDoesNotExist)
 from app.features.vscode.command import launch_vscode
 from app.features.tailscale_manager.tailscale_manager import TailscaleManager
-from app.features.docker_manager.blueprints.base_blueprint import BLUEPRINT_REGISTRY, BLUEPRINT_STRUCTURES
 import requests
 OS_HANDLERS = {
         "windows" : WindowsOS(),
@@ -187,90 +186,6 @@ class MachineManager:
 
         return launch_vscode(machine.user, machine.address, machine.user, machine.os_type)
     
-    @staticmethod
-    def get_projects():
-        projects = db.session.execute(select(Project)).scalars()
-        return  ProjectSchema(many=True).dump(projects)
-    
-    # FIXME: maybe return a receipt? FOr example to let user know what was shutdown and what wasn't in case of failure
-    def stop_project(id):
-        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
-        if not project:
-            return ProjectDoesNotExist
-        
-        recipe = BLUEPRINT_REGISTRY[project.strategy_type]
-        
-        machine_objects = Project.hydrate_machines(project.deployment_metadata['machines'])
-        result = recipe().stop(machine_objects)
-        project.is_running = False
-        db.session.commit()
-        return {}
-    
-    def get_project(id):
-        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
-        if not project:
-            raise ProjectDoesNotExist
-        return ProjectSchema().dump(project)
-    
-    def remove_project(id):
-        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
-        if not project:
-            return ProjectDoesNotExist
-        
-        recipe = BLUEPRINT_REGISTRY[project.strategy_type]
-        
-        machine_objects = Project.hydrate_machines(project.deployment_metadata['machines'])
-        result = recipe().remove(machine_objects)
-        db.session.execute(delete(Project).where(Project.id == id))
-        db.session.commit()
-        return {}
-
-    @staticmethod
-    def add_project(env, machines, images, recipe, name):
-        # a project can not be added if no recipe or machine is selected
-        if not recipe or not machines:
-            raise MissingProjectFields(message="Missing recipe and machine(s) selection")
-        
-        recipe_obj = BLUEPRINT_REGISTRY[recipe]
-     
-        machines_cleaned = Project.hydrate_machines(machines)
-        # print("cleaned machines before adding project")
- 
-        result = recipe_obj().create(name, env, images, machines_cleaned)
-
-        new_project = Project(
-            name=name,
-            strategy_type=recipe,
-        )  
-        db.session.add(new_project)
-        db.session.flush()
-        new_project.config = {"env": env, "machines": machines, "images": images}
-        # print("saving..", result)
-        new_project.deployment_metadata = {"machines" : result}
-        
-        db.session.commit()
-        return ProjectSchema().dump(new_project)
-    
-    def start_project(id):
-        # get project
-        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
-
-        if not project:
-            raise ProjectDoesNotExist
-        
-        blueprint_obj = BLUEPRINT_REGISTRY.get(project.strategy_type)
-        if not blueprint_obj:
-            # FIXME: check if invalid blueprint key
-            pass
-        updated_machines = Project.hydrate_machines(project.deployment_metadata['machines'])
-        blueprint_obj().start(updated_machines)
-
-        project.is_running = True
-        db.session.commit()
-    
-
-    def get_blueprints():
-        return [BLUEPRINT_STRUCTURES[k] for k in BLUEPRINT_STRUCTURES]
 
         
 

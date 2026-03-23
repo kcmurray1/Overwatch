@@ -1,14 +1,10 @@
-"""
-Docstring for app.features.docker_manager.strategies.cloudflared
-
-"""
-from .base_blueprint import BaseBlueprint
+from .base import BaseTemplate
 from app.models import Machine
 from docker.errors import ImageNotFound
 from dotenv import load_dotenv
 import os
 
-class CloudFlaredBlueprint(BaseBlueprint):
+class CloudFlaredBlueprint(BaseTemplate):
 
     DEFAULT_IMAGE= "cloudflare/cloudflared:latest"
 

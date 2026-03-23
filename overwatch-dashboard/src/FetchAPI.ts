@@ -15,8 +15,8 @@ export type AddProjectResponse = APIResponse<IProject>;
 export type GetAllProjectsResponse = APIResponse<IProject[]>;
 export type GetProjectBlueprintsResponse = APIResponse<BlueprintProps[]>;
 export type GetUsageResponse = APIResponse<IMachineUsage>;
-
-const BASE_URL = "/api/v2";
+// note use '/api/v2/' when containerize
+const BASE_URL = "http://localhost:5000/api/v2";
 
 export async function CustomApiRequest<T>(endpoint: string, data: any | null, method: string) : Promise<T>
 {

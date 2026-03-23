@@ -2,7 +2,7 @@ from sqlalchemy import ForeignKey, Table, Column, Enum, Text, String
 
 from typing import List, Dict
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import JSON, select
 from flask_sqlalchemy import SQLAlchemy
 
@@ -64,9 +64,9 @@ class Project(db.Model):
     strategy_type: Mapped[str] = mapped_column()
 
     config: Mapped[Dict] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
-
-    deployment_metadata: Mapped[Dict] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
     
+    deployment_metadata: Mapped[list] = mapped_column(MutableList.as_mutable(JSON), default=list)
+
     machines: Mapped[List["Machine"]] = relationship(secondary=machine_project, back_populates="projects")
 
     is_running: Mapped[bool] = mapped_column(default=False)

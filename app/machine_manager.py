@@ -108,7 +108,6 @@ class MachineManager:
 
                 # install local reporting agent
                 install_agent(hostname=address, user=username, os_type=os_type, port=port)
-                # print("adding to database...", flush=True)
                 new_machine = MachineSchema().load(data=sys_info, session=db.session)
       
                 db.session.add(new_machine)

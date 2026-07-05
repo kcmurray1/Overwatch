@@ -50,24 +50,6 @@ class LinuxOS(BaseOS):
     def stop(self):
         pass
 
-    def install_tailscale(self, exec_func, hostname, access_token):
-        print("adding tailscale to machine...")
-        combined_cmd = f"""sudo -S curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale set --operator={hostname} && tailscale up --authkey={access_token} --hostname={hostname} --accept-dns=false"""
-        
-        stdin, stdout, stderr = exec_func.client.exec_command(combined_cmd, get_pty=True)
-        stdin.write(os.environ.get("CRED") + '\n')
-        stdin.flush()
-        print('err', stderr.read().decode())
-    
-        if stdout.channel.recv_exit_status() != 0:
-            print("issue during tailscale installation...")
-            return
-        # returns tailscale ipv4 and unique ipv6(unused)
-        stdin, stdout, stderr = exec_func.client.exec_command("tailscale ip")
-        ts_ipv4, _  = stdout.read().decode().split()
-
-        return ts_ipv4
-
         
 
         

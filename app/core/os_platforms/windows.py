@@ -44,10 +44,3 @@ class WindowsOS(BaseOS):
     
     def stop(self, exec_fun):
         pass
-
-    def install_tailscale(self, exec_func, hostname, access_token):
-
-        stdin, stdout, stderr = exec_func.client.exec_command("tailscale ip -4")
-        ts_ipv4 = stdout.read().decode()
-
-        return ts_ipv4

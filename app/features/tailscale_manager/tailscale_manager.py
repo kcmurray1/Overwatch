@@ -1,5 +1,7 @@
 import requests
 import os
+from app.core.os_platforms.windows import WindowsOS
+from app.core.os_platforms.linux import LinuxOS
 
 TOKEN_URL="https://api.tailscale.com/api/v2/oauth/token"
 
@@ -37,14 +39,38 @@ class TailscaleManager:
     
     def add_to_tailnet(self, ssh_conn, os_handler, hostname):
         """Execute OS-Based commands to install tailscale"""
-        tailnet_ip = os_handler.install_tailscale(ssh_conn, hostname, self._get_access_token())
 
-        return tailnet_ip
+        if isinstance(os_handler, WindowsOS):
+            # NOTE: if windows device reaches NoState, likely needs manual authentication by signing in to machine
+            # directly instead of over ssh
+            stdin, stdout, stderr = ssh_conn.client.exec_command("tailscale ip -4")
+            ts_ipv4 = stdout.read().decode()
+            return ts_ipv4
+        elif isinstance(os_handler, LinuxOS):
+            print('handle linux')
+            
+            combined_cmd = f"""sudo -S curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale set --operator={hostname} && tailscale up --authkey={self._get_access_token()} --hostname={hostname} --accept-dns=false"""
+            
+            stdin, stdout, stderr = ssh_conn.client.exec_command(combined_cmd, get_pty=True)
+            stdin.write(os.environ.get("CRED") + '\n')
+            stdin.flush()
+            print('err', stderr.read().decode())
+        
+            if stdout.channel.recv_exit_status() != 0:
+                print("issue during tailscale installation...")
+                return
+            # returns tailscale ipv4 and unique ipv6(unused)
+            stdin, stdout, stderr = ssh_conn.client.exec_command("tailscale ip")
+            ts_ipv4, _  = stdout.read().decode().split()
+
+            return ts_ipv4
+        else:
+            print('unsupported type ', type(os_handler))
+
+        # tailnet_ip = os_handler.install_tailscale(ssh_conn, hostname, self._get_access_token())
+
+        # return tailnet_ip
         
   
         
       
-
-
-
-

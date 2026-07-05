@@ -38,11 +38,11 @@ def install_agent(hostname, user, os_type, port=22):
         local = os.path.join(local_dir, 'requirements.txt')
         sftp.put(local, remote)
         print('added requirements')
-    # if os_type == "windows":
-    #     # start agent
-    #     cmd = f"""powershell "powershell -ExecutionPolicy Bypass -File {install_dir}/{setup_script}" """
-    #     stdin, stdout, stderr = client.exec_command(cmd)
+    if os_type == "windows":
+        # start agent
+        cmd = f"""powershell "powershell -ExecutionPolicy Bypass -File {install_dir}/{setup_script}" """
+        stdin, stdout, stderr = client.exec_command(cmd)
 
-    #     print(stdout.read().decode())
-    #     print(stderr.read().decode())
+        print(stdout.read().decode())
+        print(stderr.read().decode())
     client.close()

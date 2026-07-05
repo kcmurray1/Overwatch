@@ -14,13 +14,13 @@ if (!(Test-Path "$baseDir\env")) {
 ./env/Scripts/pip.exe install -r requirements.txt
 
 
-# clear any existing rules or tasks from previous run
+# clear any existing rules or tasks from previous runs
 $taskExists = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
 if ($taskExists) {
     Write-Host "Stopping and removing Scheduled Task..."
     # Stopping a task in Windows can sometimes throw an error if it's already idle, so we catch it softly
     Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-    Unregister-ScheduledTask -TaskName $taskName -Confirm:$false SilentlyContinue
+    Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
 } else {
     Write-Host "Scheduled task $taskName not found. Skipping."
 }
@@ -57,7 +57,7 @@ $fullArg = "/c cd /d `"$baseDir`" && `"$binary`" -m uvicorn agent:app --host $ta
 # Create ScheduledTask to have the app run indefinitely
 $action = New-ScheduledTaskAction -Execute "cmd.exe" -Argument $fullArg
 $trigger = New-ScheduledTaskTrigger -AtStartup
-Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+# Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
 Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $taskName -User $env:USERNAME -RunLevel Highest -Force
 Start-ScheduledTask -TaskName $taskName
 

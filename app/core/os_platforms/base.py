@@ -12,7 +12,6 @@ class BaseOS(ABC):
     def __init_subclass__(cls):
         """Enforce subclass to implement basic commands"""
         subclass_Commands = getattr(cls, 'COMMANDS', {})
-        
 
         # verify that subclass contains required commands
         missing_cmds = set(cls.COMMANDS) - set(subclass_Commands.keys())
@@ -40,7 +39,3 @@ class BaseOS(ABC):
     def stop(self, exec_func):
         """Stop machine"""
         pass
-
-    @abstractmethod
-    def install_tailscale(self, exec_func, hostname, access_token):
-        return NotImplementedError

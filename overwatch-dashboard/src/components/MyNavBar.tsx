@@ -15,6 +15,9 @@ export const MyNavBar: React.FC = () =>{
                 <Nav.Item>
                     <Nav.Link href="/services">Sevices</Nav.Link>
                 </Nav.Item>
+                 <Nav.Item>
+                    <Nav.Link href="/proto">proto</Nav.Link>
+                </Nav.Item>
             </Nav>
             
             <hr />

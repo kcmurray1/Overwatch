@@ -6,6 +6,7 @@ import { MachineDetails } from './pages/MachineDetails';
 import { Row, Col, Container } from 'react-bootstrap';
 import { ProjectDashboard } from './pages/ProjectDashboard';
 import { ServiceDashboard } from './pages/ServiceDashboard';
+import { ProtoBoard } from './pages/ProtoBoard';
 function App() {
   return (
     <BrowserRouter>
@@ -18,6 +19,7 @@ function App() {
           <Route path="/machine-details/:id" element={<MachineDetails/>} />
           <Route path="/projects" element={<ProjectDashboard/>} />
           <Route path="/services" element={<ServiceDashboard/>} />
+          <Route path="/proto" element={<ProtoBoard/>} />
         </Routes>
       </Col>
     </Row>

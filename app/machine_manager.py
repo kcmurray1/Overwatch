@@ -1,7 +1,9 @@
 import paramiko
-from sqlalchemy import select, delete
-from app.models import db, Machine, Project
-from app.serializer import MachineSchema, ProjectSchema
+from sqlmodel import Session, select, delete
+# from sqlalchemy import select, delete
+# from app.models import db, Machine, Project
+from app.models_fast.machine import Machine
+# from app.serializer import MachineSchema, ProjectSchema
 from app.core.agent_manager.manager import install_agent
 from app.core.agent_manager.agent_manager import AgentManager
 from app.core.os_platforms.windows import WindowsOS
@@ -47,30 +49,30 @@ class SSHClientContextManager:
 
 class MachineManager:
     @staticmethod
-    def check_connections(app):
+    async def check_connections(session: Session, key_path: str):
         """Check what machines are online/offline then updates database"""
-        with app.app_context():
-            machines = db.session.execute(select(Machine)).scalars()
-            client = paramiko.SSHClient()
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            # attempt to connect to each machine
-            for machine in machines:
-                try:
-                    client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=app.config["KEY_PATH"], timeout=5)
-                    machine.is_online = True
-                except:
-                    machine.is_online = False
-                finally:
-                    db.session.commit()
-                    client.close()
-
+        machines = session.exec(select(Machine)).all()
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        # attempt to connect to each machine
+        for machine in machines:
+            try:
+                client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=key_path, timeout=5)
+                machine.is_online = True
+            except:
+                machine.is_online = False
+            finally:
+                session.commit()
+                client.close()
+                
+    # NOTE: unused
     @staticmethod
     def get_all_machines():
         """Return system information for all machines"""    
         machines = db.session.execute(select(Machine)).scalars()
         
         return MachineSchema(many=True).dump(machines)
-
+    
     @staticmethod
     def detect_os(ssh_manager):
         """
@@ -85,8 +87,9 @@ class MachineManager:
         return None
     
     @staticmethod
-    def add_machine(address, port, username, keypath):
-        machine = db.session.execute(select(Machine).where(Machine.address == address and Machine.port == port)).scalar_one_or_none()
+    def add_machine(address, port, username, keypath, session: Session):
+        # machine = db.session.execute(select(Machine).where(Machine.address == address and Machine.port == port)).scalar_one_or_none()
+        machine = session.exec(select(Machine).where(Machine.address == address and Machine.port == port)).one_or_none()
         if machine:
             raise MachineAlreadyExists
         try:
@@ -106,19 +109,23 @@ class MachineManager:
                 # install tailscale(add to tailnet)
                 ts = TailscaleManager(tags=["tag:dashboard-node"])
                 sys_info['tailscale_ip'] = ts.add_to_tailnet(ssh_conn=sshConn, os_handler=os_handler, hostname=username)
-                new_machine = MachineSchema().load(data=sys_info, session=db.session)
+                # new_machine = MachineSchema().load(data=sys_info, session=db.session)
+                new_machine = Machine(**sys_info)
 
                 # install local reporting agent
                 AgentManager.install(new_machine)
-                db.session.add(new_machine)
-                db.session.commit()
+                # db.session.add(new_machine)
+                session.add(new_machine)
+                session.commit()
+                session.refresh(new_machine)
+                # db.session.commit()
                 return sys_info
         except TimeoutError:
             raise MachineConnectionError
-        
+    
     @staticmethod
-    def get_usage(machine_id):
-        machine = db.session.execute(select(Machine).where(Machine.id==machine_id)).scalar_one_or_none()
+    def get_usage(machine_id, session: Session):
+        machine = session.exec(select(Machine).where(Machine.id == machine_id)).one_or_none()
         if not machine:
             raise MachineDoesNotExist
         try:
@@ -127,12 +134,12 @@ class MachineManager:
         except:
             return None
 
-        
     @staticmethod
-    def remove_machine(machine_id):
-        db.session.execute(delete(Machine).where(Machine.id == machine_id))
-        db.session.commit()
+    def remove_machine(machine_id, session: Session):
+        session.exec(delete(Machine).where(Machine.id == machine_id))
+        session.commit()
 
+    # TODO
     @staticmethod
     def restart_machine(machine_id, keypath):
         machine = db.session.execute(select(Machine).where(Machine.id==machine_id)).scalar_one_or_none()
@@ -146,7 +153,7 @@ class MachineManager:
             # Execute restart command
             machine_handler.restart(client.execute)
 
-
+    # TODO
     @staticmethod
     def get_running_services(machine_id, keypath, offset=None):
         # return machine info + running apps
@@ -179,10 +186,12 @@ class MachineManager:
         return stdout.read().decode().strip()
     
     @staticmethod
-    def open_vscode(machine_id):
-        """open vscode on the client machine connected to the targeted machine"""
-        machine = db.session.execute(select(Machine).where(Machine.id == machine_id)).scalar_one_or_none()
-
+    def open_vscode(machine_id, session: Session):
+        """
+        open vscode on the client machine connected to the targeted machine
+        NOTE: This only works with browser not in VSCode browser
+        """
+        machine = session.exec(select(Machine).where(Machine.id == machine_id)).one_or_none()
         return launch_vscode(machine.user, machine.address, machine.user, machine.os_type)
     
 

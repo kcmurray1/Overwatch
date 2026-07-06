@@ -1,4 +1,4 @@
-from .views import machine_view, project_view, project_blueprints_view
+from .views import machine_view, project_view, project_blueprints_view, docker_view
 from flask import Blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api/v2')
 
@@ -43,4 +43,9 @@ api_bp.add_url_rule(
     "blueprints", 
     view_func=project_blueprints_view.ProjectBlueprints.as_view('project_blueprints'),
     methods=["GET"]
+)
+api_bp.add_url_rule(
+    "docker/event",
+    view_func=docker_view.DockerEvents.as_view('docker_event'),
+    methods=["POST"]
 )

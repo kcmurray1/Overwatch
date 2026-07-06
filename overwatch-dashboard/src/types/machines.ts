@@ -35,6 +35,6 @@ export interface IMachineUsage {
 
 export interface AddMachineRequest {
     address: string
-    username: string
+    user: string
     port: number
 }

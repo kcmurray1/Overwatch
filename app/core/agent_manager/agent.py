@@ -1,7 +1,8 @@
 import psutil
 import os
 import threading
-
+import docker
+import requests
 class ByteConverter:
     BYTE_BASE = 1000
     BIBYTE_BASE = 1024
@@ -77,17 +78,42 @@ class UsageMonitor:
     def get_usage():
         return UsageMonitor._latest_stats
     
+CONTROL_PLANE_HOST = None
+def watch_docker_events():
+    global CONTROL_PLANE_HOST
+    try:
+        client = docker.from_env()  # Automatically picks up unix://var/run/docker.sock
+        print("Started watching local Docker events...")
+        
+       
+        # This loop blocks and waits for events natively from the local socket
+        for event in client.events(decode=True):
+            # send request to control plane host
+            print('event triggered')
+            if CONTROL_PLANE_HOST:
+                try:
+                    print('sending host udpated!')
+                    requests.post(f"http://{CONTROL_PLANE_HOST}:5000/api/v2/docker/event", json=event, timeout=3)
+                except Exception as e:
+                    print(f"error sending event {e}")
+            
+                
+    except Exception as e:
+        print(f"Docker event listener crashed: {e}")
 
 def write_pid():
     pid = os.getpid()
     with open("agent.pid", "w") as f:
         f.write(str(pid))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
+
 # https://fastapi.tiangolo.com/advanced/events/#lifespan
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    thread = threading.Thread(target=watch_docker_events, daemon=True)
+    thread.start()
     UsageMonitor.start_background_monitor()
     yield
 
@@ -96,7 +122,13 @@ write_pid()
 app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
-def usage():
+def usage(request: Request): 
+    global CONTROL_PLANE_HOST
+    print(request.client)
+    if CONTROL_PLANE_HOST is None:
+        print('updated host')
+        CONTROL_PLANE_HOST = request.client.host
+
     return UsageMonitor.get_usage()
     
 

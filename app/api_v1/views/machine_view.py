@@ -5,43 +5,6 @@ from app.api_v1.debug_info import generate_mock_machine
 from app.core.errors import APIError, response_template
 
 
-
-import threading
-import requests
-# Your main Flask monitor's endpoint to receive updates
-CONTROL_PLANE_WEBHOOK = "http://<your-flask-server-ip>/api/container-event"
-MACHINE_ID = "node-01"  # Or dynamically pulled from your config
-
-def watch_docker_events():
-    import docker
-    try:
-        client = docker.from_env()  # Automatically picks up unix://var/run/docker.sock
-        print("Started watching local Docker events...")
-        
-        # This loop blocks and waits for events natively from the local socket
-        for event in client.events(decode=True):
-            print(event)
-            # We only care about container status changes (start, die, pause, destroy)
-            # if event.get("Type") == "container":
-            #     container_id = event.get("id")
-            #     action = event.get("Action")
-            #     attributes = event.get("Actor", {}).get("Attributes", {})
-            #     container_name = attributes.get("name")
-                
-            #     # Format a lightweight payload for your Flask control plane
-            #     payload = {
-            #         "machine_id": MACHINE_ID,
-            #         "container_id": container_id[:12],
-            #         "container_name": container_name,
-            #         "status": "running" if action in ["start", "unpause"] else "stopped",
-            #         "raw_action": action
-            #     }
-                
-                    
-    except Exception as e:
-        print(f"Docker event listener crashed: {e}")
-
-
 class MachineDebug(MethodView):
     def get(self, count):
         return response_template(200, "ok", generate_mock_machine(count)) 

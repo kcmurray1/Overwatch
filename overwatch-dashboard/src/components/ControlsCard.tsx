@@ -8,13 +8,13 @@ import { DisplayFormBtn, type FormField } from "./DisplayFormBtn";
 const AddMachineBtn = () => {
     const [formData, setFormData] = useState<AddMachineRequest>({
         address: '',
-        username: '',
+        user: '',
         port: 22,
     });
 
     const AddMachineFormFields: FormField[] = [
     {name: "address", label: "address", formType: 'text', placeholder: '10.0.3.43'},
-    {name: "username", label: "username", formType: 'text', placeholder: 'bobby-pc'},
+    {name: "user", label: "user", formType: 'text', placeholder: 'bobby-pc'},
     {name: "port", label: "port", formType: 'text', placeholder: '80'},
     ]
     

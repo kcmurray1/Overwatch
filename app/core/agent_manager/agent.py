@@ -93,7 +93,7 @@ def watch_docker_events():
             if CONTROL_PLANE_HOST:
                 try:
                     print('sending host udpated!')
-                    requests.post(f"http://{CONTROL_PLANE_HOST}:5000/api/v2/docker/event", json=event, timeout=3)
+                    requests.post(f"http://{CONTROL_PLANE_HOST}:5000/docker/event", json=event, timeout=3)
                 except Exception as e:
                     print(f"error sending event {e}")
             

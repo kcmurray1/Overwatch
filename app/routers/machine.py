@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 from app.dependencies import get_session
 from app.models_fast.machine import Machine, MachineBase
 from app.machine_manager import MachineManager
 # from app.core.errors import APIError, response_template
 from app.config import Settings, get_settings
 from pydantic import BaseModel
+from sqlmodel import select
 router = APIRouter(
     prefix="/machines",
     tags=["machines"]

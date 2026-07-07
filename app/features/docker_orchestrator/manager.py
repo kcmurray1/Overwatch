@@ -1,52 +1,56 @@
 from .templates.base import BaseTemplate
-from app.models import db, Project
-from sqlalchemy import select, delete
+# from app.models import db, Project
+from app.models_fast.machine import Project
+# from sqlalchemy import select, delete
 from app.serializer import ProjectSchema
 from app.core.errors import (MissingProjectFields, ProjectDoesNotExist)
+from sqlmodel import Session, select, delete
 
 class DockerOrchestrationManager:
     def __init__(self):
         self.registry = BaseTemplate._registry
         self.template_structures = BaseTemplate._structures
 
-    def get_projects(self):
-        projects = db.session.execute(select(Project)).scalars()
-        return ProjectSchema(many=True).dump(projects)
+    def get_projects(self, session: Session):
+        projects = session.exec(select(Project)).all()
+        return [project.model_dump() for project in projects]
     
     # FIXME: maybe return a receipt? FOr example to let user know what was shutdown and what wasn't in case of failure
-    def stop_project(self, id):
-        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
+    def stop_project(self, id, session: Session):
+        project = session.exec(select(Project).where(Project.id == id)).one_or_none()
         if not project:
             return ProjectDoesNotExist
-        
         recipe = self.registry[project.strategy_type]
         
-        machine_objects = Project.hydrate_machines(project.deployment_metadata)
+        machine_objects = Project.hydrate_machines(session, project.deployment_metadata)
         result = recipe().stop(machine_objects)
         project.is_running = False
-        db.session.commit()
+        session.commit()
         return {}
-    
-    def get_project(self, id):
-        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
+
+    def get_project(self, id, session: Session):
+        project = session.exec(select(Project).where(Project.id == id)).one_or_none()
         if not project:
             raise ProjectDoesNotExist
-        return ProjectSchema().dump(project)
+
+        return project.model_dump()
     
-    def remove_project(self, id):
-        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
+    # NOTE: this breaks if a machine is removed then re-added is it has a different id but the project config 
+    # only remembers the machine's last ID
+    def remove_project(self, id, session: Session):
+        project = session.exec(select(Project).where(Project.id == id)).one_or_none()
         if not project:
             return ProjectDoesNotExist
         
         recipe = self.registry[project.strategy_type]
-        
-        machine_objects = Project.hydrate_machines(project.deployment_metadata)
+        machine_objects = Project.hydrate_machines(session, project.deployment_metadata)
         result = recipe().remove(machine_objects)
-        db.session.execute(delete(Project).where(Project.id == id))
-        db.session.commit()
+        session.exec(delete(Project).where(Project.id == id))
+        session.commit()
         return {}
 
-    def add_project(self, env, machines, images, template, name):
+    
+    def add_project(self,session: Session, env, machines, images, template, name):
         """
         Create a docker container on targeted machine(s). Record the initial request and separately store
         the deployment_metadata of the created containers
@@ -57,7 +61,7 @@ class DockerOrchestrationManager:
         
         template_obj = self.registry[template]
      
-        machines_cleaned = Project.hydrate_machines(machines)
+        machines_cleaned = Project.hydrate_machines(session, machines)
  
         result = template_obj().create(name, env, images, machines_cleaned)
         print('deployment_metadata', result)
@@ -66,17 +70,18 @@ class DockerOrchestrationManager:
             name=name,
             strategy_type=template,
         )  
-        db.session.add(new_project)
-        db.session.flush()
+        session.add(new_project)
+        session.flush()
+        
         new_project.config = {"env": env, "machines": machines, "images": images}
         new_project.deployment_metadata = result
-        db.session.commit()
-        return ProjectSchema().dump(new_project)
+        session.commit()
+        return {"result": "dummy"}
     
-    def start_project(self, id):
-        # get project
-        project = db.session.execute(select(Project).where(Project.id == id)).scalar_one_or_none()
 
+    def start_project(self, id, session: Session):
+        project = session.exec(select(Project).where(Project.id == id)).one_or_none()
+        
         if not project:
             raise ProjectDoesNotExist
         
@@ -85,12 +90,11 @@ class DockerOrchestrationManager:
             # FIXME: check if invalid blueprint key
             pass
         print('hydrating..')
-        updated_machines = Project.hydrate_machines(project.deployment_metadata)
+        updated_machines = Project.hydrate_machines(session, project.deployment_metadata)
         blueprint_obj().start(updated_machines)
         print('started..')
         project.is_running = True
-        db.session.commit()
-    
+        session.commit()
 
     def get_blueprints(self):
         return list(self.template_structures.values())

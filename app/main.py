@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from sqlmodel import SQLModel
-from .routers import machine
+from .routers import machine, project, blueprint, docker
 from contextlib import asynccontextmanager
 from .dependencies import engine, get_session
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,7 +22,7 @@ async def check_connections():
             await MachineManager.check_connections(session, get_settings().key_path)
             
         except Exception as e:
-            print(f"❌ Error in check_connections background loop: {e}")
+            print(f"Error in check_connections background loop: {e}")
         finally:
             # 4. Clean up the generator by advancing it past the yield (executes finally blocks)
             if session is not None:
@@ -61,9 +61,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(machine.router)
-# app.include_router(edge.router)
-# app.include_router(task.router)
-# app.include_router(project.router)
+app.include_router(project.router)
+app.include_router(blueprint.router)
+app.include_router(docker.router)
 SQLModel.metadata.create_all(engine)
 app.add_middleware(
     CORSMiddleware,

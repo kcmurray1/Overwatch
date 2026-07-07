@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, JSON, ForeignKey, Table
 from sqlalchemy.ext.mutable import MutableDict, MutableList
-from sqlalchemy import select
+# from sqlalchemy import select
 from typing import List, Dict, Optional
 from sqlmodel import Session, select, delete
 # Standard SQLAlchemy Link Table for Many-to-Many
@@ -75,8 +75,9 @@ class Project(SQLModel, table=True):
     @staticmethod
     def hydrate_machines(session: Session, machines: list):
         """Return a list of Machine database models given a list of Machine table id's"""
+
         machine_ids = [m['id'] for m in machines]
-        
+        print(machine_ids)
         # SQLModel session.exec allows executing standard SQLAlchemy statements
         machine_objects = {
             m.id: m for m in session.exec(
@@ -86,6 +87,7 @@ class Project(SQLModel, table=True):
         
         updated_machines = []
         for machine_metadata in machines:
+            print(machine_metadata)
             machine_copy = machine_metadata.copy()
             machine_copy['machine_object'] = machine_objects[machine_metadata['id']]
             updated_machines.append(machine_copy)

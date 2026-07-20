@@ -2,7 +2,7 @@ from .templates.base import BaseTemplate
 # from app.models import db, Project
 from app.models_fast.model import Container, Machine
 # from sqlalchemy import select, delete
-from app.serializer import ProjectSchema
+# from app.serializer import ProjectSchema
 from app.core.errors import (MissingProjectFields, ProjectDoesNotExist)
 from sqlmodel import Session, select, delete
 
@@ -49,8 +49,8 @@ class DockerOrchestrationManager:
         session.commit()
         return {}
 
-    def get_project(self, id, session: Session):
-        project = session.exec(select(Project).where(Project.id == id)).one_or_none()
+    def get_container(self, id, session: Session):
+        project = session.exec(select(Container).where(Container.id == id)).one_or_none()
         if not project:
             raise ProjectDoesNotExist
 
@@ -58,24 +58,33 @@ class DockerOrchestrationManager:
     
     # NOTE: this breaks if a machine is removed then re-added is it has a different id but the project config 
     # only remembers the machine's last ID
-    def remove_project(self, id, session: Session):
-        project = session.exec(select(Project).where(Project.id == id)).one_or_none()
-        if not project:
+    def remove_container(self, id, session: Session):
+        project = session.exec(select(Container).where(Container.id == id)).one_or_none()
+        if not Container:
             return ProjectDoesNotExist
         
-        recipe = self.registry[project.strategy_type]
-        machine_objects = Project.hydrate_machines(session, project.deployment_metadata)
+        recipe = self.registry[Container.strategy_type]
+        machine_objects = Container.hydrate_machines(session, Container.deployment_metadata)
         result = recipe().remove(machine_objects)
-        session.exec(delete(Project).where(Project.id == id))
+        session.exec(delete(Container).where(Container.id == id))
         session.commit()
         return {}
 
+    def add_container(self, data: dict, session: Session):
+        # validate machine id and image name
+        new_container = Container(
+            docker_id=data.get("Id"),
+            image=data["Config"]["Image"],
+            name=data.get("Name","").lstrip("/"),
+            config=data.get("Config"),
+            state=data["State"]["Status"],
+            machine_id=data.get("machind_id"),
+        )
+        session.add(new_container)
+        session.commit()
+        return new_container.model_dump()
     
     def add_project(self,session: Session, env, machines, images, template, name):
-        """
-        Create a docker container on targeted machine(s). Record the initial request and separately store
-        the deployment_metadata of the created containers
-        """
         # Can't add a project if template is unsupported or target machine is missing
         if not template or not machines:
             raise MissingProjectFields(message="Missing template and machine(s) selection")

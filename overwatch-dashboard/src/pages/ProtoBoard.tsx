@@ -16,7 +16,7 @@ export const ProtoBoard = () => {
   const loadData = async () => {
     try {
       const response = await CustomApiRequest<GetAllMachinesResponse>('machines', null, "GET");
-      const revContainers = await CustomApiRequest<GetAllContainers>('test', null, "GET");
+      const revContainers = await CustomApiRequest<GetAllContainers>('containers', null, "GET");
       setContainers(revContainers.data);
       setMachines(response.data);
       setMachineCount(response.data ? response.data.length : 0);
@@ -27,7 +27,8 @@ export const ProtoBoard = () => {
     }
   };
   useEffect(()=>{
-    const intervalId = setInterval(loadData, 5000);
+    loadData()
+    const intervalId = setInterval(loadData, 1500);
 
     return () => clearInterval(intervalId);
   }, [])
@@ -43,7 +44,7 @@ export const ProtoBoard = () => {
        
         <h1>Services</h1>
         {containers?.map((container, key) => (
-          <h1>{`${container}`}</h1> 
+          <h1 key={key}>{`${container.image}`}</h1> 
         ))}
         <br></br>
         <h1>Network Status</h1>

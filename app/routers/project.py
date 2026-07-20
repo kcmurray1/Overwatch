@@ -24,28 +24,35 @@ def read_containers(session: Session = Depends(get_session)):
 
 @router.post("/")
 def create_container(project_data: Dict[str, Any], session:Session = Depends(get_session)):
-    result = docker_orchestrator.add_project(session,**project_data)
+    new_container = docker_orchestrator.add_container(session,**project_data)
 
-    return response_template(200, "ok", result)
+    return response_template(200, "ok", new_container)
 
 @router.get("/{id}")
 async def read_container(id, session: Session = Depends(get_session)):
-    project = docker_orchestrator.get_project(id, session=session)
+    project = docker_orchestrator.get_(id, session=session)
 
     return response_template(200, "ok", project)
 
 @router.delete("/{id}")
 async def delete_container(id, session: Session = Depends(get_session)):
-    removed_project = docker_orchestrator.remove_project(id, session)
+    removed_project = docker_orchestrator.remove_container(id, session)
 
     return response_template(200, "ok", removed_project)
 
-@router.post("/{id}/stop")
-async def stop_container(id, session: Session = Depends(get_session)):
-    docker_orchestrator.stop_project(id, session)
-    return response_template(200, "ok")
-
-@router.post("/{id}/start")
-async def start_container(id, session: Session = Depends(get_session)):
-    docker_orchestrator.start_project(id, session)
+@router.post("/{id}/actions")
+async def change_container_state(id, payload, session: Session = Depends(get_session)):
+    action = payload.get("action")
+    
+    if not action:
+        print("throw error accion")
+        pass
+    
+    if action == "start":
+        pass
+    elif action == "stop":
+        pass
+    else:
+        print("unsupported action", action)
+        
     return response_template(200, "ok")

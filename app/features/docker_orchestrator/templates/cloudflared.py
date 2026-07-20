@@ -1,5 +1,5 @@
 from .base import BaseTemplate
-from app.models import Machine
+# from app.models import Machine
 from docker.errors import ImageNotFound
 from dotenv import load_dotenv
 import os

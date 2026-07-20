@@ -1,6 +1,6 @@
 from .templates.base import BaseTemplate
 # from app.models import db, Project
-from app.models_fast.machine import Project
+from app.models_fast.model import Container, Machine
 # from sqlalchemy import select, delete
 from app.serializer import ProjectSchema
 from app.core.errors import (MissingProjectFields, ProjectDoesNotExist)
@@ -11,9 +11,30 @@ class DockerOrchestrationManager:
         self.registry = BaseTemplate._registry
         self.template_structures = BaseTemplate._structures
 
-    def get_projects(self, session: Session):
-        projects = session.exec(select(Project)).all()
-        return [project.model_dump() for project in projects]
+    def get_info(self, machine_obj: Machine, session : Session):
+        b = BaseTemplate()
+        print("getting docker containers")
+        docker_client = b.get_client(machine_obj=machine_obj)
+        
+        containers_to_add = []
+        for container in docker_client.containers.list(all=True):
+            container_info = container.attrs
+            containers_to_add.append(Container(
+                docker_id=container_info.get("Id"),
+                image=container_info["Config"]["Image"],
+                name=container_info.get("Name","").lstrip("/"),
+                config=container_info.get("Config"),
+                state=container_info["State"]["Status"],
+                machine_id=machine_obj.id,
+            ))
+        
+        session.add_all(containers_to_add)
+        session.commit()
+
+
+    def get_containers(self, session: Session):
+        containers = session.exec(select(Container)).all()
+        return [container.model_dump() for container in containers]
     
     # FIXME: maybe return a receipt? FOr example to let user know what was shutdown and what wasn't in case of failure
     def stop_project(self, id, session: Session):

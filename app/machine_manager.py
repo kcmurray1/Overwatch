@@ -2,7 +2,7 @@ import paramiko
 from sqlmodel import Session, select, delete
 # from sqlalchemy import select, delete
 # from app.models import db, Machine, Project
-from app.models_fast.machine import Machine
+from app.models_fast.model import Machine
 # from app.serializer import MachineSchema, ProjectSchema
 from app.core.agent_manager.manager import install_agent
 from app.core.agent_manager.agent_manager import AgentManager
@@ -112,13 +112,20 @@ class MachineManager:
                 # new_machine = MachineSchema().load(data=sys_info, session=db.session)
                 new_machine = Machine(**sys_info)
 
+               
+            
                 # install local reporting agent
                 AgentManager.install(new_machine)
                 # db.session.add(new_machine)
                 session.add(new_machine)
                 session.commit()
                 session.refresh(new_machine)
-                # db.session.commit()
+                from app.extensions import docker_orchestrator
+                try:
+                    docker_orchestrator.get_info(new_machine, session)
+                except Exception as e:
+                    print("could not get docker containers", e)
+
                 return sys_info
         except TimeoutError:
             raise MachineConnectionError

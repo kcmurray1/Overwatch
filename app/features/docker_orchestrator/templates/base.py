@@ -11,7 +11,7 @@ class BaseTemplate(ABC):
         cls._structures[cls.__name__] = cls.get_structure(cls) if cls.get_structure(cls) else {"name": cls.__name__}
         cls._registry[cls.__name__] = cls
 
-    @abstractmethod
+    # @abstractmethod
     def get_structure(self):
         pass
     
@@ -24,6 +24,7 @@ class BaseTemplate(ABC):
         print(f"connecting to ssh://{machine_obj.user}@{machine_obj.address}:{machine_obj.port}")
         return docker.DockerClient(base_url=f"ssh://{machine_obj.user}@{machine_obj.address}:{machine_obj.port}", use_ssh_client=True, version='auto', 
         timeout=60)
+
     
     def start(self, deployment_metadata):
         """Run docker container(s) on targeted machine(s), subclass must define this as environment variables, images, and the number
@@ -35,7 +36,7 @@ class BaseTemplate(ABC):
             project_container = docker_client.containers.get(machine['container_id'])
             project_container.start()
     
-    @abstractmethod
+    # @abstractmethod
     def create(self, container_name, environment, images, machines):
         """Create and push docker container provided the image, environment variables and name for the container.
            Each project is unique and may require this method to be overridden

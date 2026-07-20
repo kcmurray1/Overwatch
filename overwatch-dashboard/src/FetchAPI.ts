@@ -1,5 +1,5 @@
 import type { BlueprintProps } from "./components/DisplayFormBtn";
-import {type  IMachine, type IMachineUsage } from "./types/machines";
+import {type IDockerContainer, type  IMachine, type IMachineUsage } from "./types/machines";
 import { type IProject } from "./types/projects";
 // T represents the shape of data we expect to receive from backend
 export interface APIResponse<T> {
@@ -10,6 +10,7 @@ export interface APIResponse<T> {
 export type VsCodeResponse = APIResponse<{link : string}>;
 export type MessageOnlyResponse = APIResponse<string>;
 export type GetAllMachinesResponse = APIResponse<IMachine[]>;
+export type GetAllContainers = APIResponse<IDockerContainer[]>
 export type AddMachineResponse = APIResponse<IMachine>;
 export type AddProjectResponse = APIResponse<IProject>;
 export type GetAllProjectsResponse = APIResponse<IProject[]>;

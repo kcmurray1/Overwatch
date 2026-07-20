@@ -1,8 +1,5 @@
 from sqlmodel import Session, create_engine
 import os
-# from dotenv import load_dotenv
-
-# load_dotenv()
 
 DATABASE_URL="sqlite:///./instance/machines.db"
 

@@ -11,6 +11,13 @@ export interface IMachine {
     is_online: boolean
 }
 
+export interface IDockerContainer {
+    name: string
+    id: string
+    status: string
+    created: string
+}
+
 
 export interface ICapcityStats {
     total: string

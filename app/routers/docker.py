@@ -14,6 +14,7 @@ class DockerEvent(BaseModel):
     Action: str
     Actor: Dict[str, Any]
 
+
 @router.post("/event")
 async def update_event(data: DockerEvent, session: Session = Depends(get_session)):
     if data.Type == 'container1':
@@ -25,3 +26,8 @@ async def update_event(data: DockerEvent, session: Session = Depends(get_session
             print(attributes[attr])
 
     return {"status": "ok"}
+
+@router.post("/")
+async def create_container(data, session: Session = Depends(get_session)):
+
+    pass

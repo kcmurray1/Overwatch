@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.dependencies import get_session
-from app.models_fast.machine import Machine, MachineBase
+# from app.models_fast.machine import Machine, MachineBase
+from app.models_fast.model import Machine, MachineBase
 from app.machine_manager import MachineManager
 # from app.core.errors import APIError, response_template
 from app.config import Settings, get_settings

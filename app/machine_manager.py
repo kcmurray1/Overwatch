@@ -64,14 +64,6 @@ class MachineManager:
             finally:
                 session.commit()
                 client.close()
-                
-    # NOTE: unused
-    @staticmethod
-    def get_all_machines():
-        """Return system information for all machines"""    
-        machines = db.session.execute(select(Machine)).scalars()
-        
-        return MachineSchema(many=True).dump(machines)
     
     @staticmethod
     def detect_os(ssh_manager):
@@ -100,23 +92,24 @@ class MachineManager:
                     raise UnsupportedMachineOS
                          
                 os_handler = OS_HANDLERS.get(os_type)
+                print("handling", os_handler)
                 sys_info = os_handler.get_system_info(sshConn.execute)
                 sys_info['os_type'] = os_type
                 sys_info['user'] = username
                 sys_info['port'] = port
                 sys_info['address'] = address
                 
+    
+                
                 # install tailscale(add to tailnet)
-                ts = TailscaleManager(tags=["tag:dashboard-node"])
+                ts = TailscaleManager(tags=["tag:homelab-core"])
                 sys_info['tailscale_ip'] = ts.add_to_tailnet(ssh_conn=sshConn, os_handler=os_handler, hostname=username)
-                # new_machine = MachineSchema().load(data=sys_info, session=db.session)
                 new_machine = Machine(**sys_info)
 
                
             
                 # install local reporting agent
                 AgentManager.install(new_machine)
-                # db.session.add(new_machine)
                 session.add(new_machine)
                 session.commit()
                 session.refresh(new_machine)

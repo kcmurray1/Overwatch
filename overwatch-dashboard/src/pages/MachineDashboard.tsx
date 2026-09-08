@@ -44,10 +44,7 @@ export const MachineDashboard = () => {
         <ControlCard machineCount={machineCount}/>  
       </Col>
       {machines?.map((machine, key) => (
-        <Col md={4} key={key}>
-        <MachineCard machine={machine} />
-        <br></br>
-        </Col>
+        <MachineCard machine={machine} key={key}/>
       )
       )}
       </Row>

@@ -104,10 +104,12 @@ export const MachineCard: React.FC<MachineCardProps> = ({machine}) =>
             </Row>
         </Card.Header>
         <Card.Body>
-            <Card.Text>{cpu}|{os}</Card.Text>
             <Row>
-               
-                <Col md={4}>
+               <Col md={10}>
+               <Card.Text>{cpu}|{os}          
+               </Card.Text>
+               </Col>
+                <Col md={2}>
                    <TopStackBtn Icon={MdDelete} onClick={handleDeleteMachine} disabled={false}/>
                    <TopStackBtn Icon={VscVscode} onClick={handleOpenVsCode} disabled={!is_online}/>
                    <TopStackBtn Icon={MdOutlineRestartAlt} onClick={handleRestartMachine} disabled={!is_online}/>

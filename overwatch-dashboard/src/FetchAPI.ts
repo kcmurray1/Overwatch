@@ -22,7 +22,7 @@ const BASE_URL = "http://100.86.175.65:5000";
 export async function CustomApiRequest<T>(endpoint: string, data: any | null, method: string) : Promise<T>
 {
     const response = await fetch(
-       `${BASE_URL}/${endpoint}`,
+       `${BASE_URL}/${endpoint}/`,
         {
             method: method,
             headers: {'Content-Type': 'application/json'},

@@ -12,8 +12,13 @@ export interface IMachine {
 }
 
 export interface IDockerContainer {
+    id: number
     image: string
     config: string
+    dockerId: string
+    machindId: number
+    name: string
+    state: string
 }
 
 

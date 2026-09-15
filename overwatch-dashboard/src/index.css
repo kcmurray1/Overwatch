@@ -1,4 +1,26 @@
-:root {
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* --color-primary-light: oklch(57.24% 0.1743 32.429); */
+
+  --color-primary-light: #522B47;
+  --color-accent-light: #A7909D;
+  --color-background-light: #FBF5F3;
+
+  --color-primary-dark: #450B1B;
+  --color-background-dark: #0F0E0E;
+  --color-accent-dark: #600A22;
+
+}
+
+@layer base {
+  body {
+    @apply min-h-screen bg-background-light dark:bg-primary-dark dark:text-slate-100;
+  }
+}
+
+/* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -65,4 +87,4 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
-}
+} */

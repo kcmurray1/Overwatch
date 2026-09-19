@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Container, Row, Col} from 'react-bootstrap'
 import { CustomApiRequest, type GetAllContainers, type GetAllMachinesResponse,  } from '../FetchAPI'
-import { MachineCard } from '../components/MachineCard'
+import { MachineCard } from '../components/machines/MachineCard'
 import { type IDockerContainer, type IMachine } from '../types/machines'
 import { ControlCard } from '../components/ControlsCard'
 

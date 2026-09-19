@@ -7,8 +7,7 @@ import { Row, Col, Container } from 'react-bootstrap';
 import { ProjectDashboard } from './pages/ProjectDashboard';
 import { ServiceDashboard } from './pages/ServiceDashboard';
 import { ProtoBoard } from './pages/ProtoBoard';
-import { HomePage } from './components/home';
-import { MainLayout } from './components/MainLayout';
+import { MainLayout } from './components/layout/MainLayout';
 function App() {
   return (
     <MainLayout/>

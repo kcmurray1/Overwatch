@@ -6,8 +6,8 @@ import {GrStatusUnknown} from "react-icons/gr"
 import {type IconType } from 'react-icons';
 import { VscVscode } from 'react-icons/vsc';
 import {useNavigate } from 'react-router-dom';
-import {CustomApiRequest, type MessageOnlyResponse, type VsCodeResponse} from '../FetchAPI';
-import { type IMachine } from '../types/machines';
+import {CustomApiRequest, type MessageOnlyResponse, type VsCodeResponse} from '../../FetchAPI';
+import { type IMachine } from '../../types/machines';
 
 interface MachineCardProps {
     machine : IMachine

@@ -24,6 +24,7 @@ class DockerEvent(BaseModel):
 
 @router.post("/event")
 async def update_event(data: DockerEvent, session: Session = Depends(get_session)):
+    print(data)
     action = data.Action
     attributes = data.Actor.get('Attributes')
     container_id = data.Actor.get('ID')

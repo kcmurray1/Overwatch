@@ -17,7 +17,7 @@ export type GetAllProjectsResponse = APIResponse<IProject[]>;
 export type GetProjectBlueprintsResponse = APIResponse<BlueprintProps[]>;
 export type GetUsageResponse = APIResponse<IMachineUsage>;
 // note use '/api/v2/' when containerize
-const BASE_URL = "http://100.86.175.65:5000";
+const BASE_URL = "http://100.123.44.57:5000";
 
 export async function CustomApiRequest<T>(endpoint: string, data: any | null, method: string) : Promise<T>
 {

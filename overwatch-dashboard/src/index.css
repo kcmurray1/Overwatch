@@ -9,6 +9,7 @@
   --color-background-light: #FBF5F3;
 
   --color-primary-dark: #450B1B;
+  --color-secondary-dark: #545d63;
   --color-background-dark: #0F0E0E;
   --color-accent-dark: #600A22;
 
@@ -16,7 +17,7 @@
 
 @layer base {
   body {
-    @apply min-h-screen bg-background-light dark:bg-primary-dark dark:text-slate-100;
+    @apply min-h-screen bg-background-light dark:bg-background-dark dark:text-slate-100;
   }
 }
 

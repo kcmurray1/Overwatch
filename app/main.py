@@ -1,15 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from sqlmodel import SQLModel, Session
-from .routers import machine, project, blueprint, docker
 from contextlib import asynccontextmanager
-from .dependencies import engine, get_session
-from fastapi.middleware.cors import CORSMiddleware
-from app.config import get_settings
-from app.machine_manager import MachineManager
 import os
 import asyncio
+from fastapi.middleware.cors import CORSMiddleware
+from app.config import get_settings
+from app.features.machines.manager import MachineManager
+from .dependencies import engine, get_session
+from .routers import docker
+from .features.containers import router as container_router
+from .features.machines import router as machine_router
+from app.core.exceptions import AppBaseException
+from app.core.responses import response_template
 
-        
 async def check_connections_v2():
     while True:
         try:
@@ -44,13 +47,22 @@ async def lifespan(app: FastAPI):
     yield
     bg_task.cancel()
     print("Shutting down control plane...")
+    
+
 
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(machine.router)
-app.include_router(project.router)
-app.include_router(blueprint.router)
+@app.exception_handler(AppBaseException)
+async def homelab_exception_handler(request: Request, exc: AppBaseException):
+    return response_template(
+        status=exc.status_code,
+        message=exc.message,
+        data=exc.data
+    )
+
+app.include_router(machine_router.router)
+app.include_router(container_router.router)
 app.include_router(docker.router)
 SQLModel.metadata.create_all(engine)
 app.add_middleware(

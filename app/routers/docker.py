@@ -3,7 +3,7 @@ from app.dependencies import get_session
 from sqlmodel import Session, select, delete
 from typing import Dict, Any
 from pydantic import BaseModel
-from app.models_fast.model import Container
+from app.models import Container
 router = APIRouter(
     prefix="/docker",
     tags=["docker"]

@@ -1,9 +1,9 @@
 from .templates.base import BaseTemplate
 # from app.models import db, Project
-from app.models_fast.model import Container, Machine
+from app.models import Machine, Container
 # from sqlalchemy import select, delete
 # from app.serializer import ProjectSchema
-from app.core.errors import (MissingProjectFields, ProjectDoesNotExist)
+from app.core.exceptions import (MissingProjectFields, ProjectDoesNotExist)
 from sqlmodel import Session, select, delete
 
 class DockerOrchestrationManager:

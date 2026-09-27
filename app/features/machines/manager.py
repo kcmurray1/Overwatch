@@ -1,16 +1,13 @@
 import paramiko
 from sqlmodel import Session, select, delete
-# from sqlalchemy import select, delete
-# from app.models import db, Machine, Project
-from app.models_fast.model import Machine
-# from app.serializer import MachineSchema, ProjectSchema
+from app.models import Machine
 from app.core.agent_manager.manager import install_agent
 from app.core.agent_manager.agent_manager import AgentManager
 from app.core.os_platforms.windows import WindowsOS
 from app.core.os_platforms.linux import LinuxOS
 from app.core.os_platforms.base import BaseOS
-from app.core.errors import (MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists, 
-                             MachineDoesNotExist, MissingProjectFields, ProjectDoesNotExist)
+from app.core.exceptions import (MachineConnectionError, UnsupportedMachineOS, MachineAlreadyExists,
+                                 MachineDoesNotExist, MissingProjectFields, ProjectDoesNotExist)
 from app.features.vscode.command import launch_vscode
 from app.features.tailscale_manager.tailscale_manager import TailscaleManager
 import requests

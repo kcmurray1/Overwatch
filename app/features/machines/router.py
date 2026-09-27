@@ -1,22 +1,20 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session, selectinload
-from app.dependencies import get_session
-# from app.models_fast.machine import Machine, MachineBase
-from app.models_fast.model import Machine, MachineBase
-from app.machine_manager import MachineManager
-# from app.core.errors import APIError, response_template
-from app.config import Settings, get_settings
 from pydantic import BaseModel
 from sqlmodel import select
 from typing import Optional
+from app.dependencies import get_session
+from app.models import Machine, MachineBase
+from .manager import MachineManager
+from app.config import Settings, get_settings
+from app.core.responses import response_template
+
 router = APIRouter(
     prefix="/machines",
     tags=["machines"]
 )
 
 
-def response_template(status, message, data=None):
-    return {"message": message, "data": data}
 
 @router.get("/")
 async def list_machines(

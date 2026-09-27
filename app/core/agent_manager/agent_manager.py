@@ -1,7 +1,7 @@
 import paramiko
 import os
 from dotenv import load_dotenv
-from app.models_fast.model import Machine
+from app.models import Machine
 
 class AgentManager:
     @staticmethod

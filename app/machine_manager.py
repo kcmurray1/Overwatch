@@ -18,7 +18,8 @@ OS_HANDLERS = {
         "windows" : WindowsOS(),
         "linux" : LinuxOS()
 }
-
+import httpx
+import asyncio
 
 # https://www.geeksforgeeks.org/python/context-manager-in-python/
 class SSHClientContextManager:
@@ -48,22 +49,33 @@ class SSHClientContextManager:
         self.client.close()
 
 class MachineManager:
+                
     @staticmethod
-    async def check_connections(session: Session, key_path: str):
-        """Check what machines are online/offline then updates database"""
+    async def check_agent_connections(session: Session):
         machines = session.exec(select(Machine)).all()
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        # attempt to connect to each machine
-        for machine in machines:
-            try:
-                client.connect(machine.address, port=machine.port,  username=machine.user, key_filename=key_path, timeout=5)
-                machine.is_online = True
-            except:
-                machine.is_online = False
-            finally:
-                session.commit()
-                client.close()
+
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            async def ping(machine: Machine):
+                host = machine.tailscale_ip or machine.address
+                print('checking', host)
+                if not host:
+                    machine.is_online = False
+                    return
+
+                try:
+                    response = await client.get(f"http://{host.strip()}:8001/")
+                    machine.is_online = (response.status_code == 200)
+                except (httpx.RequestError, httpx.HTTPStatusError):
+                    machine.is_online = False
+                
+                session.add(machine)
+
+            # Fire all checks simultaneously
+            if machines:
+                await asyncio.gather(*(ping(m) for m in machines))
+
+        session.commit()
+                    
     
     @staticmethod
     def detect_os(ssh_manager):

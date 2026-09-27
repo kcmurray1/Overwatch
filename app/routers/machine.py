@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session, selectinload
 from app.dependencies import get_session
 # from app.models_fast.machine import Machine, MachineBase
 from app.models_fast.model import Machine, MachineBase
@@ -8,6 +8,7 @@ from app.machine_manager import MachineManager
 from app.config import Settings, get_settings
 from pydantic import BaseModel
 from sqlmodel import select
+from typing import Optional
 router = APIRouter(
     prefix="/machines",
     tags=["machines"]
@@ -18,13 +19,23 @@ def response_template(status, message, data=None):
     return {"message": message, "data": data}
 
 @router.get("/")
-async def list_machines(session: Session = Depends(get_session)):
+async def list_machines(
+    include: Optional[str] = Query(None),
+    session: Session = Depends(get_session)
+    ):
     # Standard SQLAlchemy syntax
-    machines = session.execute(select(Machine)).scalars().all()
+    # machines = session.execute(select(Machine)).scalars().all()
+    machines = session.execute(select(Machine).options(selectinload(Machine.containers))).scalars().all()
 
-    machines = [machine.model_dump() for machine in machines]
+    data = []
+    for machine in machines:
+        machine_dict = machine.model_dump()
+        machine_dict["containers"] = [c.model_dump() for c in machine.containers]
+        
+        data.append(machine_dict)
+    # machines = [machine.model_dump() for machine in machines]
 
-    return response_template(status=200, message="ok", data=machines)
+    return response_template(status=200, message="ok", data=data)
 
 @router.post("/")
 async def add_machine(payload: MachineBase, session: Session = Depends(get_session), settings: Settings = Depends(get_settings)):   
@@ -41,6 +52,7 @@ async def add_machine(payload: MachineBase, session: Session = Depends(get_sessi
 async def delete_machine(id, session: Session = Depends(get_session)):
     MachineManager.remove_machine(id, session)
     return response_template(200, "ok")
+
 
 @router.get("/{id}/usage")
 async def get_usage(id, session: Session = Depends(get_session)):

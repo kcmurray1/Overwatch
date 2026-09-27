@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, Session
 from .routers import machine, project, blueprint, docker
 from contextlib import asynccontextmanager
 from .dependencies import engine, get_session
@@ -9,28 +9,16 @@ from app.machine_manager import MachineManager
 import os
 import asyncio
 
-async def check_connections():
+        
+async def check_connections_v2():
     while True:
-        # 1. Create the generator object
-        session_generator = get_session()
-        session = None
         try:
-            # 2. Advance the generator to the 'yield' statement to get the session
-            session = next(session_generator)
-            
-            # 3. Run your task
-            await MachineManager.check_connections(session, get_settings().key_path)
-            
+            # Use engine context directly for background tasks
+            with Session(engine) as session:
+                await MachineManager.check_agent_connections(session)
         except Exception as e:
             print(f"Error in check_connections background loop: {e}")
-        finally:
-            # 4. Clean up the generator by advancing it past the yield (executes finally blocks)
-            if session is not None:
-                try:
-                    next(session_generator)
-                except StopIteration:
-                    pass  # StopIteration is normal when a generator finishes
-        
+
         await asyncio.sleep(15)
 
 @asynccontextmanager
@@ -51,7 +39,7 @@ async def lifespan(app: FastAPI):
         """)
     os.chmod(ssh_config_path, 0o600)
 
-    bg_task = asyncio.create_task(check_connections())
+    bg_task = asyncio.create_task(check_connections_v2())
     
     yield
     bg_task.cancel()

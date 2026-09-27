@@ -110,7 +110,7 @@ const MachineBar = observer(() => {
 
 
 export const MachineContainer = observer(() => {
-    machineStore.poll();
+    // machineStore.poll();
     return (
     <div className="rounded-lg py-4 outline-1 dark:outline-secondary-dark"> 
     <MachineBar/>

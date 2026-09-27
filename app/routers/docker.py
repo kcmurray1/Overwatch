@@ -29,18 +29,25 @@ async def update_event(data: DockerEvent, session: Session = Depends(get_session
     attributes = data.Actor.get('Attributes')
     container_id = data.Actor.get('ID')
     
+    container = session.exec(select(Container).where(Container.docker_id == container_id)).one_or_none()
+    if not container:
+        return
+    
     if action == DockerActionType.DESTROY:
         print("removing container")
-        container = session.exec(select(Container).where(Container.docker_id == container_id)).one_or_none()    
-        if container:
-            session.delete(container)
-            session.commit()
+        session.delete(container)
+        session.commit()
     elif action == DockerActionType.START:
         print("starting container")
+        container.state = "running"
+        
     elif action == DockerActionType.STOP:
         print("stopping container")
+        container.state = "offline"
     else:
         print("unsupported docker action type", action)
+    
+    session.commit()
     
 
     return {"status": "ok"}

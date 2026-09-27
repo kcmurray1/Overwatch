@@ -24,7 +24,7 @@ class Machine(MachineBase, table=True):
     is_online: bool = Field(default=False)
     tailscale_ip: Optional[str] = Field(default=None)
 
-    containers: List["Container"] = Relationship(back_populates="machine")
+    containers: List["Container"] = Relationship(back_populates="machine", cascade_delete=True)
 
     def __repr__(self):
         return f"{self.user} running {self.os} address: {self.address}"
@@ -53,11 +53,12 @@ class ContainerStack(SQLModel, table=True):
 class Container(ContainerBase, table=True):
     __tablename__ = "containers"
 
-    machine_id: int = Field(foreign_key="machines.id")
+    machine_id: int = Field(foreign_key="machines.id", ondelete="CASCADE")
     stack_id: Optional[int] = Field(default=None, foreign_key="container_stacks.id")
 
     machine: Optional[Machine] = Relationship(back_populates="containers")
     stack: Optional[ContainerStack] = Relationship(back_populates="containers")
+    status: str = Field(default="offline", nullable=False)
 
     def __repr__(self):
         return f"Project:{self.name} using image: {self.image}"

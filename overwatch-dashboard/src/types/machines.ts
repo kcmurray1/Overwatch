@@ -9,14 +9,15 @@ export interface IMachine {
     model: string
     manufacturer: string
     is_online: boolean
+    containers: IDockerContainer[]
 }
 
 export interface IDockerContainer {
     id: number
     image: string
     config: string
-    dockerId: string
-    machindId: number
+    docker_id: string
+    machind_id: number
     name: string
     state: string
 }

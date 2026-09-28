@@ -33,6 +33,12 @@ export class MachineStore {
         }
     }
 
+    setMachines(machines: IMachine[]) {
+        machines.forEach(machine => {
+            this.machineMap.set(machine.id, machine);
+        })
+    }
+
     get machines(): IMachine[] {
         return Array.from(this.machineMap.values());
     }

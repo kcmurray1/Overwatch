@@ -1,15 +1,13 @@
 import { observer } from "mobx-react-lite"
 import { machineStore } from "../../stores/MachineStore"
 import { containerStore } from "../../stores/ContainerStore"
-import { ContainerCard } from "./ContainerCard"
+import { ContainerCard } from "./components/ContainerCard"
 import { FaPlay, FaPlus, FaStop } from "react-icons/fa"
 
 
 
 
 const ContainerBar = observer(() => {
-
-
 
     return (
          <div className="flex justify-between w-full p-4">
@@ -27,7 +25,7 @@ const ContainerBar = observer(() => {
     )
 })
 
-export const ContainerGrid = observer(() => {
+export const ContainerPage = observer(() => {
 
     return (  
     <div className="rounded-lg outline-1 dark:outline-secondary-dark">

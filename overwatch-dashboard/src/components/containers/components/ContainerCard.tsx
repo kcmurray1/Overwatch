@@ -1,8 +1,8 @@
 import { observer } from "mobx-react-lite";
-import type { IDockerContainer } from "../../types/machines";
-import { containerStore } from "../../stores/ContainerStore";
+import type { IDockerContainer } from "../../../types/machines";
+import { containerStore } from "../../../stores/ContainerStore";
 import { GrStatusGoodSmall } from "react-icons/gr";
-import { BaseCard } from "../common/BaseCard";
+import { BaseCard } from "../../common/BaseCard";
 
 interface ContainerCardProps {
     container : IDockerContainer;

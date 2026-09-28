@@ -9,27 +9,18 @@ export class ContainerStore {
 
     constructor() {
         makeAutoObservable(this);
-        this.loadContainers();
     }
 
 
-    loadContainers = async () => {
-        try {
-            const response = await CustomApiRequest<GetAllContainers>('containers', null, "GET");
-            runInAction(()=>{ 
-                console.log(response.data);
-                response.data?.forEach((container => {
-                    this.containerMap.set(container.id, container);
-                }));
+    setContainers(containers: IDockerContainer[]) {
+        containers.forEach(container => {
+            this.containerMap.set(container.id, container);
+        })
+    }
 
-            });
-
-            this.loading = false;
-        } catch(err) {
-            this.error = (err as Error).message;
-
-            this.loading = false;
-        }
+    async stopContainer(id: number) {
+        const response = await CustomApiRequest<GetAllContainers>(`containers/${id}/stop`, null, "POST");
+        
     }
 
     get containers(): IDockerContainer[] {

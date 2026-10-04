@@ -3,6 +3,7 @@ import { machineStore } from "../../stores/MachineStore";
 import { MachineCard } from "./components/MachineCard";
 import { MachineBar } from "./components/MachineBar/MachineBar";
 import { ContainerRow } from "../containers/components/ContainerRow";
+import { containerStore } from "../../stores/ContainerStore";
 
 
 export const MachinePage = observer(() => {
@@ -13,7 +14,7 @@ export const MachinePage = observer(() => {
                 {machineStore.loading ? <p>Machines...</p>
                 : machineStore.machines.map((machine, key) => {
                     return <MachineCard machine={machine} key={key}>
-                        {machine.containers.map((container) => {
+                        {containerStore.getByMachine(machine.id).map((container) => {
                             return <ContainerRow key={container.id} container={container} />
                         })}
                     </MachineCard>

@@ -17,7 +17,7 @@ export interface IDockerContainer {
     image: string
     config: string
     docker_id: string
-    machind_id: number
+    machine_id: number
     name: string
     state: string
 }

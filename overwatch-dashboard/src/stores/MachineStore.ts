@@ -1,6 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { CustomApiRequest, type AddMachineResponse, type GetAllMachinesResponse, type MessageOnlyResponse } from "../FetchAPI";
+import { CustomApiRequest, type AddMachineResponse, type GetAllMachinesResponse, type MessageOnlyResponse, type VsCodeResponse } from "../FetchAPI";
 import type { IMachine } from "../types/machines";
+import { containerStore } from "./ContainerStore";
 
 export class MachineStore {
     machineMap = new Map<Number, IMachine>();
@@ -20,9 +21,20 @@ export class MachineStore {
             const response = await CustomApiRequest<GetAllMachinesResponse>('machines', null, "GET");
             runInAction(()=>{
                 console.log(response.data);
-                response.data?.forEach((machine => {
-                    this.machineMap.set(machine.id, machine);
-                }));
+                if (response.data) {
+                    const allContainers = response.data.flatMap(
+                        (machine) => machine.containers || []
+                    );
+                    containerStore.setContainers(allContainers);
+                    
+                    response.data.forEach((machine => {
+                        this.machineMap.set(machine.id, machine);
+                    }));
+
+
+
+                }
+              
                 this.loading = false;
             });
         } catch(err) {
@@ -53,6 +65,9 @@ export class MachineStore {
     delete = async (id: number) => {
         try {
             await  CustomApiRequest<MessageOnlyResponse>(`machines/${id}`, null, "DELETE")
+            runInAction(() => {
+                this.machineMap.delete(id);
+            })
         } catch (err) {
             console.log((err as Error).message);
         }
@@ -71,6 +86,27 @@ export class MachineStore {
             console.log((err as Error).message);
         }
     }
+
+    openVSCode = async (id: number) => {
+        try {
+            const res = await CustomApiRequest<VsCodeResponse>(`machines/${id}/openvs`, null, "POST");
+            if (res?.data != null) {
+                window.location.href = res.data.link;
+            }
+        } catch (err) {
+            console.log((err as Error).message);
+        }
+    }
+
+    restartMachine = async (id: number) => {
+        try {
+            const res = await CustomApiRequest<MessageOnlyResponse>(`machines/${id}/restart`, null, "POST");
+            console.log(res?.data);
+        } catch (err) {
+            console.log((err as Error).message);
+        }
+    }
+        
 
 
 

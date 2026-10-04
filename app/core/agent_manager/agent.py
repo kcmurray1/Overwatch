@@ -3,6 +3,8 @@ import os
 import threading
 import docker
 import requests
+import socket
+
 class ByteConverter:
     BYTE_BASE = 1000
     BIBYTE_BASE = 1024
@@ -24,10 +26,6 @@ class ByteConverter:
         @classmethod
         def to_gibibyte(cls, bytes):
             return bytes / ByteConverter.BIBYTE_BASE**3
-    
-  
-    
-
 
 class UsageMonitor:
     _latest_stats = {}
@@ -88,15 +86,29 @@ def watch_docker_events():
        
         # This loop blocks and waits for events natively from the local socket
         for event in client.events(decode=True):
+            container_id = event.get("Actor").get("ID")
+                
+            payload = {
+                "action": event.get("Action", ""),
+                "container_id": container_id,
+                "host_address": socket.gethostname(),
+                "attrs": None
+            }
+            
+            try:
+                payload["attrs"] = client.containers.get(container_id).attrs
+                print('event triggered')
+            except Exception as e:
+                print("container get error", str(e))
+            
             # send request to control plane host
-            print('event triggered')
             if CONTROL_PLANE_HOST:
                 try:
+                    print(payload)
                     print('sending host udpated!')
-                    requests.post(f"http://{CONTROL_PLANE_HOST}:5000/docker/event", json=event, timeout=3)
+                    requests.post(f"http://{CONTROL_PLANE_HOST}:5000/containers/event", json=payload, timeout=3)
                 except Exception as e:
                     print(f"error sending event {e}")
-            
                 
     except Exception as e:
         print(f"Docker event listener crashed: {e}")

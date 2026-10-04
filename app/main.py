@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.features.machines.manager import MachineManager
 from .dependencies import engine, get_session
-from .routers import docker
 from .features.containers import router as container_router
 from .features.machines import router as machine_router
 from app.core.exceptions import AppBaseException
@@ -63,7 +62,6 @@ async def homelab_exception_handler(request: Request, exc: AppBaseException):
 
 app.include_router(machine_router.router)
 app.include_router(container_router.router)
-app.include_router(docker.router)
 SQLModel.metadata.create_all(engine)
 app.add_middleware(
     CORSMiddleware,

@@ -1,9 +1,9 @@
-import { makeAutoObservable, runInAction } from "mobx";
-import { CustomApiRequest, type GetAllContainers } from "../FetchAPI";
+import { makeAutoObservable, ObservableMap, runInAction } from "mobx";
 import type { IDockerContainer } from "../types/machines";
+import { ObservableContainerModel } from "../components/containers/ContainerModel";
 
 export class ContainerStore {
-    containerMap = new Map<Number, IDockerContainer>();
+    containerMap = new ObservableMap<Number, ObservableContainerModel>();
     loading = true;
     error: string | null = null;
 
@@ -14,17 +14,28 @@ export class ContainerStore {
 
     setContainers(containers: IDockerContainer[]) {
         containers.forEach(container => {
-            this.containerMap.set(container.id, container);
+            const model = new ObservableContainerModel(container);
+            this.containerMap.set(model.id, model);
         })
     }
 
-    async stopContainer(id: number) {
-        const response = await CustomApiRequest<GetAllContainers>(`containers/${id}/stop`, null, "POST");
-        
+
+    async create(id: number) {
+
     }
 
-    get containers(): IDockerContainer[] {
+    async delete(id: number) {
+
+    }
+
+    get containers(): ObservableContainerModel[] {
         return Array.from(this.containerMap.values());
+    }
+
+    getByMachine(machineId: number) {
+        return Array.from(this.containerMap.values()).filter(
+            (container) => container.machine_id === machineId
+        )
     }
 
 

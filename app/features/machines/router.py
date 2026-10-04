@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 
-@router.get("/")
+@router.get("")
 async def list_machines(
     include: Optional[str] = Query(None),
     session: Session = Depends(get_session)
@@ -35,7 +35,7 @@ async def list_machines(
 
     return response_template(status=200, message="ok", data=data)
 
-@router.post("/")
+@router.post("")
 async def add_machine(payload: MachineBase, session: Session = Depends(get_session), settings: Settings = Depends(get_settings)):   
     new_machine = MachineManager.add_machine(
         payload.address, 

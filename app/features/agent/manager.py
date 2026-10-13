@@ -103,6 +103,49 @@ class AgentManager:
         client.close()
         
     @staticmethod
-    def update():
-        pass
+    def update(machine_model: Machine):
+        load_dotenv()
+        
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(
+            hostname=machine_model.address,
+            port=machine_model.port,
+            username=machine_model.user,
+            key_filename=os.environ.get("KEY_PATH"),
+        )
+
+        install_dir, setup_script = AgentManager.get_installation_info(
+            machine_model.os_type, machine_model.user
+        )
+
+        local_dir = os.path.join(os.getcwd(), "node-agent")
+        
+        # stop the agent        
+        if machine_model.os_type == "linux":
+            print(f"Stopping agent on {machine_model.address}...")
+            client.exec_command("sudo systemctl stop overwatch")
+
+        # push updated files to aget
+        with client.open_sftp() as sftp:
+            print(f"Deploying node-agent to remote path: {install_dir}")
+            AgentManager._sftp_upload_dir(sftp, local_dir, install_dir)
+            print("SFTP upload complete!")
+
+            if machine_model.os_type == "windows":
+                # Start agent or execute setup script on Windows
+                script_path = f"{install_dir}/{setup_script}".replace("/", "\\")
+                cmd = f'powershell -ExecutionPolicy Bypass -File "{script_path}"'
+                
+                stdin, stdout, stderr = client.exec_command(cmd)
+                print("Powershell Output:", stdout.read().decode())
+                print("Powershell Errors:", stderr.read().decode())
+        
+        # restart the service
+        if machine_model.os_type == "linux":
+            print(f"Restarting agent service on {machine_model.address}...")
+            stdin, stdout, stderr = client.exec_command("sudo systemctl start overwatch")
+            print("Restart errors (if any):", stderr.read().decode())
+        client.close()
+        
     

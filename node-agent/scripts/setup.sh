@@ -37,8 +37,6 @@ if [[ -n "$1" ]]; then
 	echo "Teardown complete!"
 	
 
-
-
 else
 	# Setup: Create agent folder
 	mkdir -p $PROJECT_DIR
@@ -53,20 +51,23 @@ else
 	# install requirements
 	./env/bin/pip install -r requirements.txt
 	# Create the service(to run even if system restarts)
+
 cat <<EOF | sudo tee $SERVICE_FILE_LOCATION
 [Unit]
 Description=Overwatch Agent FastAPI Service
 After=network.target tailscaled.service
 
 [Service]
+Type=simple
 User=$USER
 Group=$USER
 WorkingDirectory=$PROJECT_DIR
-ExecStart=$PROJECT_DIR/env/bin/python -m uvicorn agent:app --host $TAILSCALE_ADDR --port 8001
+ExecStart=$PROJECT_DIR/env/bin/python -u -m uvicorn agent:app --host $TAILSCALE_ADDR --port 8001
 Restart=always
 RestartSec=5
-StandardOutput=append:$PROJECT_DIR/agent.log
-StandardError=append:$PROJECT_DIR/agent.log
+
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -75,5 +76,28 @@ EOF
 	sudo systemctl daemon-reload
 	sudo systemctl enable $SERVICE_NAME.service
 	sudo systemctl restart $SERVICE_NAME.service
+
+# Setup permissions for service
+SUDO_FILE="/etc/sudoers.d/overwatch"
+
+echo "Configuring passwordless sudo for overwatch service..."
+
+# 1. Since you aren't using global sudo, $USER is already your normal deployment user
+TARGET_USER="$USER"
+
+# 2. Use 'sudo tee' to safely write to the root-owned sudoers directory
+echo "$TARGET_USER ALL=(ALL) NOPASSWD: /bin/systemctl stop overwatch, /bin/systemctl start overwatch, /bin/systemctl restart overwatch, /bin/systemctl daemon-reload" | sudo tee "$SUDO_FILE" > /dev/null
+
+# 3. Secure the file permissions with sudo
+sudo chmod 440 "$SUDO_FILE"
+
+# 4. Validate the sudoers syntax
+if sudo visudo -cf "$SUDO_FILE"; then
+    echo "Sudoers configuration for overwatch applied successfully!"
+else
+    echo "Error: Sudoers validation failed. Removing invalid file."
+    sudo rm -f "$SUDO_FILE"
+    exit 1
+fi
 fi
 

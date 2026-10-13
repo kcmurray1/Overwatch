@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { BaseCard } from "../../common/BaseCard";
-import { GrStatusGoodSmall, GrStatusUnknown } from "react-icons/gr";
+import { GrStatusGoodSmall, GrStatusUnknown, GrUpgrade } from "react-icons/gr";
 import { FaLinux, FaMinusCircle, FaWindows } from "react-icons/fa";
 import { machineStore } from "../../../stores/MachineStore";
 import type { IMachine } from "../../../types/machines";
@@ -35,11 +35,12 @@ export const MachineCard = observer(({machine, children}: MachineCardProps) => {
             <BaseCard className="grid grid-cols-6">
                 <MachineInfo machine={machine}/>
                 <VscVscode size={OS_LOGO_SIZE} onClick={(e) => {e.stopPropagation(); machineStore.openVSCode(machine.id);}}/>
-                
+                <GrUpgrade size={OS_LOGO_SIZE} onClick={() => machineStore.updateMachine(machine)}/>
                 {machine.os_type === "windows" ? <FaWindows size={OS_LOGO_SIZE} /> 
                 : machine.os_type === "linux" ? <FaLinux size={OS_LOGO_SIZE} /> 
                 : <GrStatusUnknown size={OS_LOGO_SIZE}/>}
                 <GrStatusGoodSmall className="shrink-0" color={machine.is_online ? "green" : "red"}/>
+                
                 <FaMinusCircle onClick={(e) =>{e.stopPropagation(); machineStore.delete(machine.id)}}/>
             </BaseCard>
             </div>

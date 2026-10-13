@@ -9,6 +9,7 @@ from app.features.machines.manager import MachineManager
 from .dependencies import engine, get_session
 from .features.containers import router as container_router
 from .features.machines import router as machine_router
+from .features.agent import router as agent_router
 from app.core.exceptions import AppBaseException
 from app.core.responses import response_template
 
@@ -62,6 +63,7 @@ async def homelab_exception_handler(request: Request, exc: AppBaseException):
 
 app.include_router(machine_router.router)
 app.include_router(container_router.router)
+app.include_router(agent_router.router)
 SQLModel.metadata.create_all(engine)
 app.add_middleware(
     CORSMiddleware,

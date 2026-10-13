@@ -2,6 +2,7 @@ import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { FaPlay, FaPlus, FaStop } from "react-icons/fa";
 import { AddMachineModal } from "./components/AddMachineModal";
+import { GrUpdate } from "react-icons/gr";
 
 export const MachineBar = observer(() => {
 

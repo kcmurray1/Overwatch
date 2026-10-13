@@ -29,7 +29,13 @@ export async function CustomApiRequest<T>(endpoint: string, data: any | null, me
             ...(data && {body: JSON.stringify(data)})
         }
     )
-    const result = await response.json();
+    let result;
+    try {
+        result = await response.json();
+    } catch {
+        result = { detail: response.statusText };
+    }
+    
     if(!response.ok)
     {
         throw new Error(result.message);

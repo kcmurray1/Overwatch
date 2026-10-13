@@ -101,8 +101,20 @@ export class MachineStore {
     restartMachine = async (id: number) => {
         try {
             const res = await CustomApiRequest<MessageOnlyResponse>(`machines/${id}/restart`, null, "POST");
-            console.log(res?.data);
+            console.log(res);
         } catch (err) {
+            console.log((err as Error).message);
+        }
+    }
+
+    updateMachine = async (machine: IMachine) => {
+
+        try{
+            console.log('updating', machine.user)
+            const res = await CustomApiRequest<MessageOnlyResponse>(`agents/update`, machine, "POST")
+            console.info('updating status', res);
+
+        } catch(err) {
             console.log((err as Error).message);
         }
     }

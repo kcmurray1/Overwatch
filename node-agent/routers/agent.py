@@ -5,3 +5,6 @@ router = APIRouter(
     tags=["agent"]
 )
 
+@router.get("/")
+def agent_status(container_id: str):
+    return {"status": "agent status is running"}

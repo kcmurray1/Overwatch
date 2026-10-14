@@ -32,10 +32,10 @@ export class ObservableContainerModel implements IDockerContainer {
 
     async stop() {
         try{
-
-        } catch(err) {
             const response = await CustomApiRequest<MessageOnlyResponse>(`containers/${this.id}/stop`, null, "POST");        
     
+        } catch(err) {
+          
         }
     }
 

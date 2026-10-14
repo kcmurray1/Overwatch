@@ -2,11 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 import docker
 from docker.errors import APIError, NotFound
-
+from logger import get_logger
 router = APIRouter(
     prefix="/containers",
     tags=["containers"]
 )
+logger = get_logger("docker")
 
 def get_docker_client():
     """Dependency provider for Docker SDK client."""
@@ -39,15 +40,14 @@ def start_container(
     container_id: str,
     client: docker.DockerClient = Depends(get_docker_client)
 ):
-    """Start a container by ID or Name."""
+    logger.info(f'starting container: {container_id}')
     try:
         container = client.containers.get(container_id)
         container.start()
         return {"status": "success", "message": f"Container {container_id} started"}
-    except NotFound:
+    except Exception as e:
+        logger.error(f'Container Start Error: {str(e)}')
         raise HTTPException(status_code=404, detail=f"Container '{container_id}' not found")
-    except APIError as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{container_id}/stop")

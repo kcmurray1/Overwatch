@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlmodel import Session, select, delete
 from typing import Dict, Any
 from pydantic import BaseModel
@@ -6,7 +6,7 @@ from app.dependencies import get_session
 from app.models import Container
 from app.extensions import docker_orchestrator
 from app.core.responses import response_template
-
+from .manager import ContainerManager
 router = APIRouter(
     prefix="/containers",
     tags=["containers"]
@@ -37,13 +37,20 @@ async def delete_container(id, session: Session = Depends(get_session)):
     return response_template(200, "ok", removed_project)
 
 @router.post("/{id}/start")
-async def start_container(id, session: Session = Depends(get_session)):
+async def start_container(
+    id, 
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session)):
     print('starting container..', id)
-    
+    ContainerManager.start(id, session, background_tasks)
     return response_template(200, "ok")
 
 @router.post("/{id}/stop")
-async def stop_container(id, session: Session = Depends(get_session)):
+async def stop_container( id, 
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session)):
+    print('stopping container..', id)
+    ContainerManager.stop(id, session, background_tasks)
     print("stopping container", id)
     
     return response_template(200, "ok")
@@ -53,6 +60,7 @@ class DockerActionType:
     START = "start" # connect, start
     DESTROY = "destroy"
     STOP = "stop" # kill, disconnect, stop, die
+    DIE = "die"
     
 
 class DockerEvent(BaseModel):
@@ -78,7 +86,7 @@ async def update_container(data: DockerEvent, session: Session = Depends(get_ses
         print("starting container")
         container.state = "running"
         
-    elif action == DockerActionType.STOP:
+    elif action == DockerActionType.STOP or action == DockerActionType.DIE:
         print("stopping container")
         container.state = "offline"
     else:

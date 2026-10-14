@@ -11,7 +11,7 @@ from logger import setup_logging, get_logger
 
 CONTROL_PLANE_HOST = None
 setup_logging(logfile_name="agent_main")
-logger = get_logger("main")
+logger = get_logger(__name__)
 
 
 def watch_docker_events():

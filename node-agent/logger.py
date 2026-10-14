@@ -25,7 +25,7 @@ def setup_logging(logfile_name: str= None, prepend_timestamp: bool=False) -> Pat
                 "format": "[%(levelname)s] [%(name)s] %(message)s"
             },
             "file_fmt": {
-                "format": "%(asctime)s - [%(name)s] - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
+                "format": "%(asctime)s [%(name)s] - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
         },
@@ -46,12 +46,9 @@ def setup_logging(logfile_name: str= None, prepend_timestamp: bool=False) -> Pat
                 "encoding": "utf-8",
             },
         },
-        "loggers": {
-            "overwatch_agent": {
-                "level": "DEBUG",
-                "handlers": ["console", "file"],
-                "propagate": False,
-            },
+        "root": {
+            "level": "DEBUG",
+            "handlers": ["console", "file"]
         },
     }
     logging.config.dictConfig(LOGGING_CONFIG)
@@ -59,4 +56,4 @@ def setup_logging(logfile_name: str= None, prepend_timestamp: bool=False) -> Pat
 
 def get_logger(module_name: str) -> logging.Logger:
     """Gets a child logger for a specific module under character_clipper."""
-    return logging.getLogger(f"overwatch_agent.{module_name}")
+    return logging.getLogger(module_name)

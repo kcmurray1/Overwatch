@@ -2,7 +2,6 @@ import paramiko
 from sqlmodel import Session, select, delete
 from app.models import Machine
 from app.features.agent.manager import AgentManager
-# from node-agent.agent_manager import AgentManager
 from app.core.os_platforms.windows import WindowsOS
 from app.core.os_platforms.linux import LinuxOS
 from app.core.os_platforms.base import BaseOS
@@ -118,13 +117,15 @@ class MachineManager:
                
             
                 # install local reporting agent
-                AgentManager.install(new_machine)
+                # AgentManager.install(new_machine)
                 session.add(new_machine)
                 session.commit()
                 session.refresh(new_machine)
-                from app.extensions import docker_orchestrator
+                # from app.extensions import docker_orchestrator
+                from app.features.containers.manager import ContainerManager
                 try:
-                    docker_orchestrator.get_info(new_machine, session)
+                    # docker_orchestrator.get_info(new_machine, session)
+                    ContainerManager.detect_existing_containers(machine_obj=new_machine, session=session)
                 except Exception as e:
                     print("could not get docker containers", e)
 

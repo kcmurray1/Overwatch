@@ -2,90 +2,30 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* --color-primary-light: oklch(57.24% 0.1743 32.429); */
-
+  /* 
+  Surface: Background
+  Primary: Primary color for important elements, headers, etc
+  Accent: 
+  Border/muted:
+   */
+  --color-surface-light: #FAF6F5;
+  --color-surface-card-light: #64415b; /* Optional: distinct card background */
   --color-primary-light: #522B47;
-  --color-accent-light: #A7909D;
-  --color-background-light: #FBF5F3;
+  --color-accent-light: #6b3c5e;
+  --color-border-light: #E5D5D0;
 
+  --color-surface-dark: #0F0E0E;
+  --color-surface-card-dark: #1a1818; /* Optional: slightly elevated card color */
   --color-primary-dark: #450B1B;
-  --color-secondary-dark: #545d63;
-  --color-background-dark: #0F0E0E;
-  --color-accent-dark: #600A22;
+  --color-accent-dark: #5e1429;       /* Unified accent or keep your #600A22 */
+  --color-secondary-dark: #474e53;    
+  --color-border-dark: #2A2527;
 
 }
 
 @layer base {
   body {
-    @apply min-h-screen bg-background-light dark:bg-background-dark dark:text-slate-100;
+    @apply min-h-screen bg-surface-light dark:bg-surface-dark text-slate-100;
   }
 }
 
-/* :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-} */

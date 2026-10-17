@@ -2,20 +2,20 @@ import { observer } from "mobx-react-lite";
 import { pageStore } from "../../stores/PageStore";
 import { SideBar } from "./SideBar";
 import { ToolsPage } from "../tools";
-import { Home } from "../../pages/Home";
+import { MachinePage } from "../machines/MachinePage";
 
 export const MainLayout = observer(() => {
   // Function to render the active component based on MobX state
   const renderActivePage = () => {
     switch (pageStore.activePage) {
       case "home":
-        return <Home/>;
+        return <MachinePage/>;
       case "tools":
         return <ToolsPage/>;
       case "settings":
         return ;
       default:
-        return <Home/>
+        return <MachinePage/>
     }
   };
 

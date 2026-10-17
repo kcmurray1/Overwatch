@@ -15,10 +15,10 @@ interface ContainerCardProps {
 export const ContainerRow = observer(({ container } : ContainerCardProps) => {
 
     return (
-        <BaseCard>
+        <BaseCard className="bg-accent-light dark:bg-accent-dark">
             <div className="grid grid-cols-4">
                 <p className="truncate">{container.name}</p>
-                <p className="truncate">{container.image}</p>
+                <a className="truncate" href={`${container.primary_url}`}>{container.primary_url}</a>
 
                 {container.isRunning ? <FaPause onClick={() => container.stop()}/> 
                 : <FaPlay onClick={() => container.start()}/>}

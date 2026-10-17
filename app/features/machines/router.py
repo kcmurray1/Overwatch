@@ -8,7 +8,7 @@ from app.models import Machine, MachineBase
 from .manager import MachineManager
 from app.config import Settings, get_settings
 from app.core.responses import response_template
-
+from app.features.containers.manager import ContainerUtils
 router = APIRouter(
     prefix="/machines",
     tags=["machines"]
@@ -22,16 +22,19 @@ async def list_machines(
     session: Session = Depends(get_session)
     ):
     # Standard SQLAlchemy syntax
-    # machines = session.execute(select(Machine)).scalars().all()
     machines = session.execute(select(Machine).options(selectinload(Machine.containers))).scalars().all()
 
     data = []
     for machine in machines:
         machine_dict = machine.model_dump()
-        machine_dict["containers"] = [c.model_dump() for c in machine.containers]
+        container_data = []
+        for container in machine.containers:
+            container_dict = container.model_dump()
+            container_dict["primary_url"] = ContainerUtils.get_url(container_dict["config"], machine.tailscale_ip)
+            container_data.append(container_dict)
+        machine_dict["containers"] = container_data
         
         data.append(machine_dict)
-    # machines = [machine.model_dump() for machine in machines]
 
     return response_template(status=200, message="ok", data=data)
 

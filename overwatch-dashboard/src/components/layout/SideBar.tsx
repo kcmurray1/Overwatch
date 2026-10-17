@@ -17,7 +17,7 @@ export const SideBar = observer(() => {
 
 
     return (
-        <div className="h-full flex z-40 pointer-events-none bg-primary-light dark:bg-primary-dark">
+        <div className="h-full flex z-40 pointer-events-none p-4 bg-primary-light dark:bg-primary-dark">
             <div className="h-full w-16 flex flex-col items-center py-4 space-y-4 pointer-events-auto">
                 <button
                     onClick={() => {pageStore.page = "home"}}

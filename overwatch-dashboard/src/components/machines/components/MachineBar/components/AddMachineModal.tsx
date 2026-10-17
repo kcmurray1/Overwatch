@@ -22,7 +22,7 @@ export const AddMachineModal = observer(({isOpen, onClose}: BaseModalProps) => {
         <BaseModal isOpen={isOpen} onClose={onClose}>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-400">
+                    <label className="block text-xs font-medium mb-1">
                     User
                     </label>
                     <input
@@ -31,9 +31,9 @@ export const AddMachineModal = observer(({isOpen, onClose}: BaseModalProps) => {
                     value={user}
                     onChange={(e) => setUser(e.target.value)}
                     placeholder="username"
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-zinc-50 dark:bg-surface-dark  focus:outline-none focus:ring-2 focus:ring-primary"
                     />
-                    <label className="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-400">
+                    <label className="block text-xs font-medium mb-1">
                     Machine IP or Address
                     </label>
                     <input
@@ -42,9 +42,9 @@ export const AddMachineModal = observer(({isOpen, onClose}: BaseModalProps) => {
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="e.g. 192.168.1.10"
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-zinc-50 dark:bg-surface-dark focus:outline-none focus:ring-2 focus:ring-primary"
                     />
-                     <label className="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-400">
+                     <label className="block text-xs font-medium mb-1">
                     Port
                     </label>
                     <input
@@ -53,14 +53,14 @@ export const AddMachineModal = observer(({isOpen, onClose}: BaseModalProps) => {
                     value={port}
                     onChange={(e) => setPort(e.target.value)}
                     placeholder="e.g. 8000"
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-zinc-50 dark:bg-surface-dark focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
                     <button
                     type="submit"
-                    className="px-3 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition"
+                    className="px-3 py-1.5 text-xs font-medium bg-emerald-500 hover:bg-emerald-700 rounded-lg transition"
                     >
                     Add Machine
                     </button>

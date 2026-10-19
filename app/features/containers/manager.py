@@ -5,7 +5,7 @@ import docker
 from fastapi import BackgroundTasks
 from app.models import Container
 from .utils import ContainerUtils
-
+from .schemas import ContainerConfig
 class ContainerManager:
     
     async def send_agent_request(address, method, endpoint):
@@ -84,5 +84,15 @@ class ContainerManager:
     def delete(id):
         return NotImplementedError
     
+    
+    def list_containers(session: Session):
+        containers = session.exec(select(Container)).all()
+        return [container.model_dump() for container in containers]
+    
+    
+    def list_configs(session: Session):
+        configs = session.exec(select(ContainerConfig)).all()
+        from fastapi.encoders import jsonable_encoder
+        return [jsonable_encoder(config.model_dump()) for config in configs]
     
     

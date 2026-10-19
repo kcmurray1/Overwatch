@@ -1,6 +1,7 @@
 export interface IMachine {
     id: number
     address: string
+    tailscale_ip: string
     os_type: string
     os: string
     user: string

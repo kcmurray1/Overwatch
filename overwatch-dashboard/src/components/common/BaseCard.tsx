@@ -7,8 +7,8 @@ interface BaseCardProps {
 
 export const BaseCard = observer(({className, children}: BaseCardProps) => {
     return (
-         <div className={`w-full p-4 ${className}`}>
-            {/* <input type="checkbox" id="select" name="selectCard" onClick={(e) => e.stopPropagation()}></input> */}
+         <div className={`w-full p-4 flex-1 ${className}`}>
+            <input type="checkbox" id="select" name="selectCard" onClick={(e) => e.stopPropagation()}></input>
             {children}
         </div>
         

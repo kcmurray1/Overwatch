@@ -1,5 +1,9 @@
 import paramiko
 from sqlmodel import Session, select, delete
+import httpx
+import asyncio
+import queue
+import threading
 from app.models import Machine
 from app.features.agent.manager import AgentManager
 from app.core.os_platforms.windows import WindowsOS
@@ -14,9 +18,6 @@ OS_HANDLERS = {
         "windows" : WindowsOS(),
         "linux" : LinuxOS()
 }
-import httpx
-import asyncio
-
 # https://www.geeksforgeeks.org/python/context-manager-in-python/
 class SSHClientContextManager:
     def __init__(self, address, port, username, keypath):
@@ -132,6 +133,60 @@ class MachineManager:
                 return sys_info
         except TimeoutError:
             raise MachineConnectionError
+    
+    @staticmethod
+    def check_ssh_connection(ip, user, port):
+        """Verify if machine exists at specified address"""
+        try:
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(hostname=ip, port=port, username=user, timeout=3) 
+            return True
+        except Exception as e:
+            # print(f'{user}@{ip}', e)
+            return False
+        finally:
+            client.close()
+
+   
+
+    def scan_network(target_machines, subnet="10.0.0", num_threads=30):
+        q = queue.Queue()
+        stop_event = threading.Event()
+        target_lock = threading.Lock()
+        found_machines = set()
+        
+        for i in range(1, 255):
+            q.put(f"{subnet}.{i}")
+        
+        if not target_machines:
+            return
+            
+        def worker_fn():
+            while not q.empty() and not stop_event.is_set():
+                try:
+                    ip = q.get_nowait()
+                except queue.Empty:
+                    break
+                
+                for machine in target_machines:
+                    if MachineManager.check_ssh_connection(ip, user=machine["user"], port=machine["port"]):
+                        with target_lock:
+                            found_machines.add(machine["user"])
+                            print(f"{machine["user"]}@{ip}:{machine["port"]}")
+                            if len(found_machines) == len(target_machines):
+                                stop_event.set()
+              
+        threads = []
+        for _ in range(num_threads):
+            t = threading.Thread(target=worker_fn)
+            threads.append(t)
+            t.start()
+        
+        for t in threads:
+            t.join()
+        print(found_machines)
+        print("scan complete!")
     
     @staticmethod
     def get_usage(machine_id, session: Session):

@@ -4,9 +4,10 @@ export interface BaseModalProps {
     isOpen: boolean
     onClose: ()=>void
     children?: React.ReactNode
+    maxWidth?: string
 }
 
-export const BaseModal = observer(({isOpen, onClose, children}: BaseModalProps) => {
+export const BaseModal = observer(({isOpen, onClose, children, maxWidth = "max-w-lg"}: BaseModalProps) => {
 
     if (!isOpen) return;
     return (
@@ -18,7 +19,8 @@ export const BaseModal = observer(({isOpen, onClose, children}: BaseModalProps) 
         aria-hidden="true" 
         />
        <div 
-        className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl bg-white p-6 shadow-2xl transition-all dark:bg-surface-card-dark text-zinc-900 dark:text-zinc-100"
+        className={`relative z-10 w-full ${maxWidth} overflow-hidden rounded-xl
+             bg-white p-6 shadow-2xl transition-all dark:bg-surface-card-dark text-zinc-900 dark:text-zinc-100`}
         role="dialog"
         aria-modal="true"
       >{children}</div>

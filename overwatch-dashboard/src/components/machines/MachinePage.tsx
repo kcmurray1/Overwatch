@@ -6,7 +6,6 @@ import { MachineCard } from "./components/MachineCard";
 import { MachineBar } from "./components/MachineBar/MachineBar";
 import { ContainerRow } from "../containers/components/ContainerRow";
 import { containerStore } from "../../stores/ContainerStore";
-import { ToolBar } from "../containers/toolbar";
 
 export const MachinePage = observer(() => {
     useEffect(() => {
@@ -14,10 +13,6 @@ export const MachinePage = observer(() => {
         return () => syncStore.stopPolling();
     }, []);
     return (
-    <>
-        <div className="flex bg-primary-light dark:bg-primary-dark p-2 rounded-lg mb-4">
-            <ToolBar/>
-        </div>
         <div className="rounded-lg py-4 outline-1 bg-surface-card-light dark:bg-surface-card-dark dark:outline-secondary-dark"> 
             <MachineBar/>
             <div className="rounded-lg">
@@ -31,6 +26,5 @@ export const MachinePage = observer(() => {
                     })}
             </div>
         </div>
-    </>
     );
 });

@@ -1,0 +1,19 @@
+{
+  "name": "selenium-hub",
+  "description": "Selenium Grid Hub for orchestrating node browser instances.",
+  "spec": {
+    "name": "{{name}}-hub",
+    "image": "selenium/hub:latest",
+    "detach": true,
+    "ports": {
+      "4442/tcp": 4442,
+      "4443/tcp": 4443,
+      "4444/tcp": 4444
+    },
+    "environment": {
+      "SE_EVENT_BUS_HOST": "{{address}}",
+      "SE_EVENT_BUS_PUBLISH_PORT": "4442",
+      "SE_EVENT_BUS_SUBSCRIBE_PORT": "4443"
+    }
+  }
+}

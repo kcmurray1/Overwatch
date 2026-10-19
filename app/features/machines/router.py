@@ -67,3 +67,15 @@ async def open_vscode(id, session: Session = Depends(get_session)):
     URI = MachineManager.open_vscode(id, session)
     return response_template(status=200, message="ok", data={'link': URI})
 
+import asyncio
+
+@router.post("/scan")
+async def scan_machine_connections(session: Session = Depends(get_session)):
+    db_machines = session.exec(select(Machine)).all()
+    
+    # Convert ORM objects to plain dicts so threads don't touch active session instances
+    target_data = [{"id": m.id, "user": m.user, "port": m.port} for m in db_machines]
+    await asyncio.to_thread(MachineManager.scan_network, target_data)
+    
+    return response_template(status=200, message="Subnet scan complete")
+

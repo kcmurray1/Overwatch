@@ -1,3 +1,4 @@
+import type { ContainerConfig } from "./components/containers/types/configs";
 import type { BlueprintProps } from "./components/DisplayFormBtn";
 import {type IDockerContainer, type  IMachine, type IMachineUsage } from "./types/machines";
 import { type IProject } from "./types/projects";
@@ -10,6 +11,7 @@ export interface APIResponse<T> {
 export type VsCodeResponse = APIResponse<{link : string}>;
 export type MessageOnlyResponse = APIResponse<string>;
 export type GetAllMachinesResponse = APIResponse<IMachine[]>;
+export type GetAllContainerConfigs = APIResponse<ContainerConfig[]>;
 export type GetAllContainers = APIResponse<IDockerContainer[]>
 export type AddMachineResponse = APIResponse<IMachine>;
 export type AddProjectResponse = APIResponse<IProject>;

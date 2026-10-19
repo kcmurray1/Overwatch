@@ -3,6 +3,9 @@ from sqlmodel import SQLModel, Session
 from contextlib import asynccontextmanager
 import os
 import asyncio
+import json
+from pathlib import Path
+from sqlmodel import Session, select
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.features.machines.manager import MachineManager
@@ -12,6 +15,44 @@ from .features.machines import router as machine_router
 from .features.agent import router as agent_router
 from app.core.exceptions import AppBaseException
 from app.core.responses import response_template
+from app.features.containers.schemas import ContainerConfig
+
+def seed_container_configs():
+    """Scans the app/configs directory and seeds any .json templates into SQLite if they don't exist."""
+    # Assuming your main.py is in app/, configs/ will be right alongside it
+    config_dir = Path(__file__).parent / "core/configs/containers"
+    
+    if not config_dir.exists():
+        print(f"Configs directory not found at {config_dir}, skipping seed.")
+        return
+
+    with Session(engine) as session:
+        for file_path in config_dir.glob("*.json"):
+            try:
+                with open(file_path, "r") as f:
+                    template = json.load(f)
+                
+                name = template.get("name")
+                if not name:
+                    continue
+                
+                # Check if this config template name already exists in SQLite
+                statement = select(ContainerConfig).where(ContainerConfig.name == name)
+                existing = session.exec(statement).first()
+                
+                if not existing:
+                    print(f"Seeding container config: {name} (from {file_path.name})")
+                    new_config = ContainerConfig(
+                        name=name,
+                        description=template.get("description"),
+                        spec=template.get("spec", {})
+                    )
+                    session.add(new_config)
+                    
+            except Exception as e:
+                print(f"Failed to load seed config {file_path.name}: {e}")
+                
+        session.commit()
 
 async def check_connections_v2():
     while True:
@@ -26,6 +67,9 @@ async def check_connections_v2():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    
+    seed_container_configs()
+    
     settings = get_settings()
     key_path = settings.key_path
     

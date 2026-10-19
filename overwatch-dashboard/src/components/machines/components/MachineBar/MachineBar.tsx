@@ -2,6 +2,7 @@ import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { FaPlay, FaPlus, FaStop } from "react-icons/fa";
 import { AddMachineModal } from "./components/AddMachineModal";
+import { machineStore } from "../../../../stores/MachineStore";
 
 export const MachineBar = observer(() => {
 
@@ -10,8 +11,9 @@ export const MachineBar = observer(() => {
     return (
          <div className="flex justify-between w-full p-4">
             <AddMachineModal isOpen={isOpen} onClose={()=>setIsOpen(false)}/>
-            <div>
+            <div className="flex flex-row gap-2">
                 <h1>Machines</h1>
+                <p>{machineStore.count}</p>
             </div>
 
             <div className="flex justify-between gap-3">

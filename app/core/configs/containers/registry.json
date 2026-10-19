@@ -1,0 +1,23 @@
+{
+  "name": "registry",
+  "description": "Local Docker Registry service with Tailscale binding and persistent storage.",
+  "spec": {
+    "image": "registry:2",
+    "name": "{{name}}-registry",
+    "ports": {
+      "5000/tcp": "{{tailscale_ip}}:5000"
+    },
+    "volumes": {
+      "/var/lib/docker-registry/{{name}}": {
+        "bind": "/var/lib/registry",
+        "mode": "rw"
+      }
+    },
+    "environment": {
+      "REGISTRY_STORAGE_DELETE_ENABLED": "true"
+    },
+    "restart_policy": {
+      "Name": "unless-stopped"
+    }
+  }
+}

@@ -3,8 +3,7 @@ import { themeStore } from '../stores/ThemeStore';
 
 export const ThemeToggle = observer(() => {
   return (
-    <div>
-   
+    <div className='flex flex-row gap-2'>
       <input type="checkbox"
       aria-label="Toggle dark mode"
       onClick={() => {  themeStore.setTheme(themeStore.isDark ? 'light' : 'dark')}}

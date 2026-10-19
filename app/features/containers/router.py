@@ -7,6 +7,7 @@ from app.models import Container
 from app.extensions import docker_orchestrator
 from app.core.responses import response_template
 from .manager import ContainerManager
+from .schemas import ContainerConfig
 router = APIRouter(
     prefix="/containers",
     tags=["containers"]
@@ -15,7 +16,7 @@ router = APIRouter(
 
 @router.get("")
 def read_containers(session: Session = Depends(get_session)):
-    containers = docker_orchestrator.get_containers(session)
+    containers = ContainerManager.list_containers(session)
     return response_template(status=200, message="ok", data=containers)
 
 @router.post("")
@@ -24,11 +25,11 @@ def create_container(project_data: Dict[str, Any], session:Session = Depends(get
 
     return response_template(200, "ok", new_container)
 
-@router.get("/{id}")
-async def read_container(id, session: Session = Depends(get_session)):
-    project = docker_orchestrator.get_(id, session=session)
+# @router.get("/{id}")
+# async def read_container(id, session: Session = Depends(get_session)):
+#     project = docker_orchestrator.get_(id, session=session)
 
-    return response_template(200, "ok", project)
+#     return response_template(200, "ok", project)
 
 @router.delete("/{id}")
 async def delete_container(id, session: Session = Depends(get_session)):
@@ -96,3 +97,10 @@ async def update_container(data: DockerEvent, session: Session = Depends(get_ses
     
 
     return {"status": "ok"}
+
+
+@router.get("/configs")
+def read_container_configs(session: Session = Depends(get_session)):
+    configs = ContainerManager.list_configs(session)
+    
+    return response_template(status=200, message="ok", data=configs)

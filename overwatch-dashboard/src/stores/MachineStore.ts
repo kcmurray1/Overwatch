@@ -55,6 +55,10 @@ export class MachineStore {
         return Array.from(this.machineMap.values());
     }
 
+    get count(): number {
+        return this.machineMap.size;
+    }
+
     poll() {
         if(this.intervalId) return;
         this.loadMachines();

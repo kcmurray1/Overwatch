@@ -1,0 +1,20 @@
+{
+  "name": "selenium-node",
+  "description": "Selenium Grid Node worker instance with shared memory allocation.",
+  "spec": {
+    "name": "{{name}}-node",
+    "image": "selenium/node-chrome:latest",
+    "detach": true,
+    "shm_size": "10g",
+    "ports": {
+      "5555/tcp": 5555
+    },
+    "environment": {
+      "SE_EVENT_BUS_HOST": "{{hub_address}}",
+      "SE_NODE_HOST": "{{address}}",
+      "SE_NODE_PORT": "5555",
+      "SE_NODE_MAX_SESSIONS": "4",
+      "SE_NODE_OVERRIDE_MAX_SESSIONS": "true"
+    }
+  }
+}

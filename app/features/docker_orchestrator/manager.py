@@ -31,10 +31,6 @@ class DockerOrchestrationManager:
         session.add_all(containers_to_add)
         session.commit()
 
-
-    def get_containers(self, session: Session):
-        containers = session.exec(select(Container)).all()
-        return [container.model_dump() for container in containers]
     
     # FIXME: maybe return a receipt? FOr example to let user know what was shutdown and what wasn't in case of failure
     def stop_project(self, id, session: Session):

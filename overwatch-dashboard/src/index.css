@@ -13,6 +13,7 @@
   --color-primary-light: #522B47;
   --color-accent-light: #6b3c5e;
   --color-border-light: #E5D5D0;
+  --color-select-light: #9e568c;
 
   --color-surface-dark: #0F0E0E;
   --color-surface-card-dark: #1a1818; /* Optional: slightly elevated card color */
@@ -20,6 +21,7 @@
   --color-accent-dark: #5e1429;       /* Unified accent or keep your #600A22 */
   --color-secondary-dark: #474e53;    
   --color-border-dark: #2A2527;
+  --color-select-dark: #972243;
 
 }
 

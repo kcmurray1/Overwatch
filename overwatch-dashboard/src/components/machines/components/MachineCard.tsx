@@ -7,17 +7,58 @@ import type { IMachine } from "../../../types/machines";
 import { useState } from "react";
 import { VscVscode } from "react-icons/vsc";
 
-
-
-
-const MachineInfo = observer(({machine}: {machine: IMachine}) => {
-    
+export const MachineInfo = observer(({ machine }: { machine: IMachine }) => {
     return (
-        <hgroup>
-            <h1>{machine.user}</h1>
-            <p>{machine.model}@{machine.address}</p>
-        </hgroup>
-    )
+        <div className="flex flex-col min-w-0">
+            <span className="text-xs uppercase truncate">
+                {machine.user}
+            </span>
+            <span className="truncate text-sm">
+                {machine.model}
+            </span>
+            <span className="text-xs font-mono truncate" title={machine.cpu}>
+                {machine.cpu}
+            </span>
+        </div>
+    );
+});
+
+const MachineNetwork = observer(({machine}: {machine: IMachine}) => {
+    const [copiedText, setCopiedText] = useState<string| null>(null);
+
+    const handleCopy = (e: React.MouseEvent, text:string, label: string) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        setCopiedText(label)
+        setTimeout(() => setCopiedText(null), 2000);
+    }
+
+    return (
+        <div className="flex flex-col gap-2 min-w-0 text-sm">
+            <div
+                onClick={(e) => handleCopy(e, machine.tailscale_ip, 'ts')} 
+                className="flex gap-1.5 cursor-pointer hover:text-accent-light transition-colors" title="Copy">
+                <span className="text-[10px] font-semibold px-1 py-0.5 rounded bg-surface-card-light/60 dark:bg-surface-card-dark/60">TS</span>
+                <span className="truncate">
+                    {machine.tailscale_ip}
+                </span>
+                {copiedText === 'ts' && (
+                        <span className="text-[10px] text-emerald-400 font-sans ml-auto">Copied</span>
+                    )}
+            </div>
+            <div
+                onClick={(e) => handleCopy(e, machine.address, 'lan')}  
+                className="flex gap-1.5 cursor-pointer hover:text-accent-light transition-colors" title="Copy">
+                <span className="text-[10px] font-semibold px-1 py-0.5 rounded bg-surface-card-light/60 dark:bg-surface-card-dark/60">LAN</span>
+                <span className="truncate">
+                     {machine.address}
+                </span>
+                {copiedText === 'lan' && (
+                        <span className="text-[10px] text-emerald-400 font-sans ml-auto">Copied</span>
+                    )}
+            </div>
+        </div>
+    );
 })
 
 
@@ -35,6 +76,7 @@ export const MachineCard = observer(({machine, children}: MachineCardProps) => {
             <div onClick={() => setIsOpen(!isOpen)}>
             <BaseCard className="grid grid-cols-7 bg-primary-light dark:bg-primary-dark">
                 <MachineInfo machine={machine}/>
+                <MachineNetwork machine={machine}/>
                 {machine.os_type === "windows" ? <FaWindows size={OS_LOGO_SIZE} /> 
                 : machine.os_type === "linux" ? <FaLinux size={OS_LOGO_SIZE} /> 
                 : <GrStatusUnknown className={`${ICON_CLASS}`}/>}

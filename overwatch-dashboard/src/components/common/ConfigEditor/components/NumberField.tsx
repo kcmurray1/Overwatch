@@ -35,7 +35,7 @@ export const NumberField: React.FC<NumberFieldProps> = ({
           const val = e.target.value;
           onChange(val === "" ? 0 : Number(val));
         }}
-        className="p-2 bg-ctp-crust  text-sm focus:outline-none transition-colors"
+        className="p-2  text-sm focus:outline-none transition-colors p-2 transition-colors outline-none border focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500 "
       />
     </div>
   );

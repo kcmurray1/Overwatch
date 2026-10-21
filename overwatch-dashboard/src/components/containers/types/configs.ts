@@ -16,7 +16,7 @@ export interface ContainerSpec {
   restart_policy?: RestartPolicy;
   ports?: Record<string, number | string>;
   volumes?: Record<string, VolumeBinding | string>;
-  environment?: Record<string, string>;
+  environment?: Record<string, any>;
   
   // Index signature: Allows any extra Docker SDK parameters (e.g., privileged, network_mode, labels)
   [key: string]: any;

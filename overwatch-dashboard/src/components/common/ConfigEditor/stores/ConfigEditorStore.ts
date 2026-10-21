@@ -57,8 +57,7 @@ export class ConfigEditorStore<T extends object = object> {
 
   save = async (apiEndpoint: string) => {
         try {
-            
-            const response = await CustomApiRequest<T>(apiEndpoint, this.config, "PUT");
+            const response = await CustomApiRequest<T>(apiEndpoint, this.config, "POST");
             console.log("saving", apiEndpoint)
             console.log(response);
         } catch(err) {

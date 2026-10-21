@@ -12,7 +12,7 @@ interface ArrayFieldProps {
 export const ArrayField = observer(({title, values, onChange}: ArrayFieldProps) => {
     return (
         <div>
-            <h1 className="text-ctp-sapphire p-2">{title}</h1>
+            <h1 className="p-2">{title}</h1>
             <div className="grid grid-cols-5 gap-2 p-2">
              {values.map((value, index) => {
                     if (typeof value === "string") {

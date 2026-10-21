@@ -29,10 +29,10 @@ export const TextField: React.FC<TextFieldProps> = ({
         disabled={disabled}
         placeholder={placeholder}
         onChange={(e) => onChange?.(e.target.value)}
-        className={`p-2 transition-colors outline-none ${
+        className={`p-2 transition-colors outline-none border focus:ring-1 focus:ring-blue-500 dark:focus:ring-amber-500 ${
           disabled
             ? "bg-gray-800/50  text-gray-500 cursor-not-allowed"
-            : "bg-ctp-crust "
+            : " "
         }`}
       />
     </div>

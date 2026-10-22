@@ -8,12 +8,12 @@ from .utils import ContainerUtils
 from .schemas import ContainerConfig
 class ContainerManager:
     
-    async def send_agent_request(address, method, endpoint):
+    async def send_agent_request(address, method, endpoint, data={}):
         try:
             url = f"http://{address}:8001/{endpoint}"
             print('sending reqquest to', url)
             async with httpx.AsyncClient() as client:
-                response = await client.request(method=method, url=url, data={})
+                response = await client.request(method=method, url=url, json=data)
                 print("agent respsone", response)
                 response.raise_for_status()
         except Exception as e:
@@ -45,8 +45,19 @@ class ContainerManager:
         session.add_all(containers_to_add)
         session.commit()
 
-    def create():
-        return NotImplementedError
+    def create(machine_objects, config, background_tasks: BackgroundTasks):
+        for machine_object in machine_objects:
+            background_tasks.add_task(
+                ContainerManager.send_agent_request,
+                address=machine_object.get("address"),
+                method="POST",
+                endpoint=f"containers/create",
+                data=config
+            )
+            
+        
+        
+        
     
     def start(id, session: Session, background_tasks: BackgroundTasks):
         statement = select(Container).where(Container.id == id).options(selectinload(Container.machine))

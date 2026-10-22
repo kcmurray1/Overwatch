@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 import docker
+from typing import Dict, Any
 from docker.errors import APIError, NotFound
-from logger import get_logger
+import logging
 router = APIRouter(
     prefix="/containers",
     tags=["containers"]
 )
-logger = get_logger("docker")
+logger = logging.getLogger("docker")
 
 def get_docker_client():
     """Dependency provider for Docker SDK client."""
@@ -33,6 +34,20 @@ def get_container(
         raise HTTPException(status_code=404, detail=f"Container '{container_id}' not found")
     except APIError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/create")
+def create_container(
+    data: Dict[str, Any],
+    client: docker.DockerClient = Depends(get_docker_client)
+):
+    try:
+        container = client.containers.create()
+        logger.info(data)
+        return {"status": "success", "message": f"Container {container.id} created"}
+    except Exception as e:
+        logger.error(f'Container Start Error: {str(e)}')
+        raise HTTPException(status_code=404, detail=f"Container unable to be created")
+
 
 
 @router.post("/{container_id}/start")

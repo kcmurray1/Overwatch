@@ -106,7 +106,17 @@ def read_container_configs(session: Session = Depends(get_session)):
     return response_template(status=200, message="ok", data=configs)
 
 @router.post("/deploy")
-def deploy_container(data: Dict[str, Any], session: Session = Depends(get_session)):
+def deploy_container(
+    data: Dict[str, Any], 
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
+    ):
+    
+    machines = data.pop("machines")
+    
+    ContainerManager.create(machines, data, background_tasks)
+    
+    
     
     print(data)
     

@@ -102,15 +102,18 @@ const ContainerForm = observer(({config, update}: {config: ContainerConfig, upda
 export const ContainerModal = observer(({isOpen, onClose}: BaseModalProps) => {
 
     const [selectedName, setSelectedName] = useState<string>("");
-    const [selectedMachineIds, setSelectedMachineIds] = useState<number[]>([]);
+    const [selectedMachines, setSelectedMachines] = useState<{id: number, address: string}[]>([]);
 
-    const handleToggleMachine = (machineId: number) => {
-        setSelectedMachineIds(prev => 
-            prev.includes(machineId) 
-                ? prev.filter(id => id !== machineId) 
-                : [...prev, machineId]
-        );
-    };
+    const handleToggleMachine = (machine: { id: number; address: string }) => {
+        setSelectedMachines(prev => {
+            const exists = prev.some(m => m.id === machine.id);
+            if (exists) {
+                return prev.filter(m => m.id !== machine.id);
+            } else {
+                return [...prev, { id: machine.id, address: machine.address }];
+            }
+    });
+};
 
     // Convert MobX Map values into an array for the dropdown options
     const configs: ContainerConfig[] = Array.from(containerStore.configMap.values());
@@ -130,13 +133,13 @@ export const ContainerModal = observer(({isOpen, onClose}: BaseModalProps) => {
                             Target Machines
                         </label>
                         <span className="text-xs">
-                            {selectedMachineIds.length} selected
+                            {selectedMachines.length} selected
                         </span>
                     </div>
 
                     <div className="p-2 grid grid-cols-4">
                            {machineStore.machines.map((machine, index) => {
-                                const isSelected = selectedMachineIds.includes(machine.id);
+                                const isSelected = selectedMachines.some(m => m.id === machine.id);
                                 const isOnline = machine.is_online; // Assuming this is boolean based on your status span
 
                                 return (
@@ -144,7 +147,7 @@ export const ContainerModal = observer(({isOpen, onClose}: BaseModalProps) => {
                                         key={machine.id}
                                         onClick={() => {
                                             if (isOnline) {
-                                                handleToggleMachine(machine.id);
+                                                handleToggleMachine({id: machine.id, address: machine.tailscale_ip});
                                             }
                                         }}
                                         className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
@@ -165,9 +168,9 @@ export const ContainerModal = observer(({isOpen, onClose}: BaseModalProps) => {
                                             />
                                             <div>
                                                 <p className={`text-sm font-mono ${!isOnline ? "text-zinc-500" : "text-zinc-200"}`}>
-                                                    {machine.user || machine.address}
+                                                    {machine.user || machine.tailscale_ip}
                                                 </p>
-                                                <p className="text-xs text-gray-500 font-mono">{machine.address}</p>
+                                                <p className="text-xs text-gray-500 font-mono">{machine.tailscale_ip}</p>
                                             </div>
                                         </div>
                                         
@@ -209,7 +212,12 @@ export const ContainerModal = observer(({isOpen, onClose}: BaseModalProps) => {
 
                 </div>
             )}
-            onSave={async(updatedConfig) => {console.log("savingawdw", updatedConfig)}}
+            onSave={(updatedConfig) => {
+                updatedConfig.machines = selectedMachines;
+                delete (updatedConfig as any).id
+                delete (updatedConfig as any).created_at
+                delete (updatedConfig as any).updated_at
+            }}
            >
             
            </GenericConfigEditor>

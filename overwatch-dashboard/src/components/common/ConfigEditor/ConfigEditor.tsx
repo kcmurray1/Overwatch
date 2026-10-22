@@ -12,7 +12,7 @@ interface Props<T extends object> {
     config: T,
     update: (updater: (draft: T) => void) => void
   ) => React.ReactNode;
-  onSave?: (apiEndpoint: string) => void;
+  onSave?: (config: T) => void;
 }
 
 
@@ -28,12 +28,13 @@ export const GenericConfigEditor = observer(
         alert("Please fix JSON syntax errors before saving.");
         return;
       }
+      //  FIXME: allow optional override?
+      onSave?.(store.config);
       if (apiEndpoint) {
         await store.save(apiEndpoint)
       }
       
-      // FIXME: allow optional override?
-      // onSave?.(store.config);
+     
     };
 
     const handleReset = () => {

@@ -7,11 +7,12 @@ from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 from routers import DockerRouter, SystemRouter, AgentRouter
 from routers.system import UsageMonitor
-from logger import setup_logging, get_logger
+from logger import setup_logging
+import logging
 
 CONTROL_PLANE_HOST = None
 setup_logging(logfile_name="agent_main")
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def watch_docker_events():

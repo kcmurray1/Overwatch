@@ -1,7 +1,6 @@
 # core/exceptions.py
 from typing import Any, Optional
 
-
 class AppBaseException(Exception):
     """Base exception for all application domain errors."""
     status_code: int = 500

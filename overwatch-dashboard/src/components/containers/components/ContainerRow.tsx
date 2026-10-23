@@ -10,12 +10,13 @@ import { FaPause, FaPlay } from "react-icons/fa";
 
 interface ContainerCardProps {
     container : ObservableContainerModel;
+    disabled?: boolean
 }
 
-export const ContainerRow = observer(({ container } : ContainerCardProps) => {
+export const ContainerRow = observer(({ container, disabled = false} : ContainerCardProps) => {
 
     return (
-        <BaseCard className="bg-accent-light dark:bg-accent-dark">
+        <BaseCard className={`bg-accent-light dark:bg-accent-dark transition-opacity ${disabled ? "opacity-50 pointer-events-none" : ""}`}>
             <div className="grid grid-cols-4">
                 <p className="truncate">{container.name}</p>
                 <a className="truncate" href={`${container.primary_url}`}>{container.primary_url}</a>

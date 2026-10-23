@@ -53,7 +53,3 @@ def setup_logging(logfile_name: str= None, prepend_timestamp: bool=False) -> Pat
     }
     logging.config.dictConfig(LOGGING_CONFIG)
     return log_file_path
-
-# def get_logger(module_name: str) -> logging.Logger:
-#     """Gets a child logger for a specific module under character_clipper."""
-#     return logging.getLogger(module_name)

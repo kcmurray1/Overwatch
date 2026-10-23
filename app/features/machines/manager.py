@@ -4,6 +4,7 @@ import httpx
 import asyncio
 import queue
 import threading
+from fastapi import BackgroundTasks
 from app.models import Machine
 from app.features.agent.manager import AgentManager
 from app.core.os_platforms.windows import WindowsOS
@@ -79,6 +80,7 @@ class MachineManager:
         """
         Check for OS using the helper's execute method.
         """
+        print("detecting os...")
         if "Microsoft Windows" in ssh_manager.execute("ver"):
             return "windows"
             
@@ -118,7 +120,7 @@ class MachineManager:
                
             
                 # install local reporting agent
-                # AgentManager.install(new_machine)
+                AgentManager.install(new_machine)
                 session.add(new_machine)
                 session.commit()
                 session.refresh(new_machine)
@@ -259,6 +261,44 @@ class MachineManager:
         machine = session.exec(select(Machine).where(Machine.id == machine_id)).one_or_none()
         return launch_vscode(machine.user, machine.address, machine.user, machine.os_type)
     
+
+    
+    @staticmethod
+    def deploy_container(machine_ids, data, session:Session, background_tasks: BackgroundTasks):
+        from app.features.containers.manager import ContainerManager
+        import re
+        import json
+        machine_objects = session.exec(
+            select(Machine).where(Machine.id.in_(machine_ids))
+        ).all()
+        
+        def hydrate(config_data, machine_dict):
+            """
+            replace tags in config with machine information. 
+            (EX) {{tailscale_ip}} will be replaced with machine_object.tailscale_ip
+            """
+            config_str = json.dumps(config_data)
+            # match all instances of {{token}} or {{token_alternate}}
+            tokens = set(re.findall(r"\{\{([a-zA-Z_]+)\}\}", config_str))
+            
+            for token in tokens:
+                if machine_dict.get(token):
+                    config_str = config_str.replace(f'{{{{{token}}}}}', machine_dict.get(token))
+            
+            return json.loads(config_str)
+                    
+            
+            
+        
+        for machine_object in machine_objects:
+                config = hydrate(data.get("spec"), machine_object.model_dump())
+                background_tasks.add_task(
+                    ContainerManager.send_agent_request,
+                    address=machine_object.tailscale_ip,
+                    method="POST",
+                    endpoint=f"containers/create",
+                    data=config
+                )
 
         
 

@@ -29,5 +29,5 @@ export interface ContainerConfig {
   spec: ContainerSpec;
   created_at: string;
   updated_at: string;
-  machines: {id: number, address: string}[];
+  machine_ids: number[];
 }

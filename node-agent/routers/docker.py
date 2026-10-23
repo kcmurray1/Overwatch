@@ -8,7 +8,7 @@ router = APIRouter(
     prefix="/containers",
     tags=["containers"]
 )
-logger = logging.getLogger("docker")
+logger = logging.getLogger(__name__)
 
 def get_docker_client():
     """Dependency provider for Docker SDK client."""
@@ -41,8 +41,9 @@ def create_container(
     client: docker.DockerClient = Depends(get_docker_client)
 ):
     try:
-        container = client.containers.create()
         logger.info(data)
+        container = client.containers.create(**data)
+        
         return {"status": "success", "message": f"Container {container.id} created"}
     except Exception as e:
         logger.error(f'Container Start Error: {str(e)}')

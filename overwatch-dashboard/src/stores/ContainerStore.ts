@@ -52,10 +52,6 @@ export class ContainerStore {
     }
 
 
-    async create(id: number) {
-
-    }
-
     async delete(id: number) {
 
     }

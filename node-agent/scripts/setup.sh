@@ -86,7 +86,7 @@ echo "Configuring passwordless sudo for overwatch service..."
 TARGET_USER="$USER"
 
 # 2. Use 'sudo tee' to safely write to the root-owned sudoers directory
-echo "$TARGET_USER ALL=(ALL) NOPASSWD: /bin/systemctl stop overwatch, /bin/systemctl start overwatch, /bin/systemctl restart overwatch, /bin/systemctl daemon-reload" | sudo tee "$SUDO_FILE" > /dev/null
+echo "$TARGET_USER ALL=(ALL) NOPASSWD: /bin/systemctl stop overwatch, /bin/systemctl start overwatch, /bin/systemctl restart overwatch, /bin/systemctl daemon-reload, /usr/bin/docker *" | sudo tee "$SUDO_FILE" > /dev/null
 
 # 3. Secure the file permissions with sudo
 sudo chmod 440 "$SUDO_FILE"

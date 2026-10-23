@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, Query
 import threading
 import psutil
+import logging
 
 router = APIRouter(
     prefix="/system",
     tags=["system"]
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ByteConverter:

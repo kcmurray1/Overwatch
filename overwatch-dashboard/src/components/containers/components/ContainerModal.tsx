@@ -102,18 +102,16 @@ const ContainerForm = observer(({config, update}: {config: ContainerConfig, upda
 export const ContainerModal = observer(({isOpen, onClose}: BaseModalProps) => {
 
     const [selectedName, setSelectedName] = useState<string>("");
-    const [selectedMachines, setSelectedMachines] = useState<{id: number, address: string}[]>([]);
+    const [selectedMachineIds, setSelectedMachineIds] = useState<number[]>([]);
 
-    const handleToggleMachine = (machine: { id: number; address: string }) => {
-        setSelectedMachines(prev => {
-            const exists = prev.some(m => m.id === machine.id);
-            if (exists) {
-                return prev.filter(m => m.id !== machine.id);
-            } else {
-                return [...prev, { id: machine.id, address: machine.address }];
-            }
-    });
-};
+    const handleToggleMachine = (machineId: number) => {
+        setSelectedMachineIds(prev => 
+            prev.includes(machineId) 
+                ? prev.filter(id => id !== machineId) 
+                : [...prev, machineId]
+        );
+    };
+
 
     // Convert MobX Map values into an array for the dropdown options
     const configs: ContainerConfig[] = Array.from(containerStore.configMap.values());
@@ -133,21 +131,21 @@ export const ContainerModal = observer(({isOpen, onClose}: BaseModalProps) => {
                             Target Machines
                         </label>
                         <span className="text-xs">
-                            {selectedMachines.length} selected
+                            {selectedMachineIds.length} selected
                         </span>
                     </div>
 
                     <div className="p-2 grid grid-cols-4">
-                           {machineStore.machines.map((machine, index) => {
-                                const isSelected = selectedMachines.some(m => m.id === machine.id);
-                                const isOnline = machine.is_online; // Assuming this is boolean based on your status span
+                           {machineStore.machines.map((machine) => {
+                                const isSelected = selectedMachineIds.includes(machine.id);
+                                const isOnline = machine.is_online; 
 
                                 return (
                                     <div
                                         key={machine.id}
                                         onClick={() => {
                                             if (isOnline) {
-                                                handleToggleMachine({id: machine.id, address: machine.tailscale_ip});
+                                                handleToggleMachine(machine.id);
                                             }
                                         }}
                                         className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
@@ -183,22 +181,23 @@ export const ContainerModal = observer(({isOpen, onClose}: BaseModalProps) => {
                                 );
                             })}
                     </div>
-                </div>
-                <select
-                    className="w-full border  bg-accent-dark rounded-md p-2 text-sm focus:ring-2 outline-none"
+                    <select
+                    className="w-full border text-white bg-accent-light dark:bg-accent-dark rounded-md p-2 text-sm focus:ring-2 outline-none"
                     value={activeConfig?.name || ""}
                     onChange={(e) => setSelectedName(e.target.value)}
-                >
-                    {configs.length === 0 ? (
-                    <option value="" disabled>Loading templates...</option>
-                    ) : (
-                    configs.map((cfg) => (
-                        <option key={cfg.name} value={cfg.name}>
-                        {cfg.name} {cfg.description ? `(${cfg.description})` : ""}
-                        </option>
-                    ))
-                    )}
-                </select>
+                    >
+                        {configs.length === 0 ? (
+                        <option value="" disabled>Loading templates...</option>
+                        ) : (
+                        configs.map((cfg) => (
+                            <option key={cfg.name} value={cfg.name}>
+                            {cfg.name} {cfg.description ? `(${cfg.description})` : ""}
+                            </option>
+                        ))
+                        )}
+                    </select>
+                </div>
+               
             </div>
             {/* NOTE: changing key forces component to reinitialize */}
            {activeConfig ? <GenericConfigEditor<ContainerConfig>
@@ -213,7 +212,7 @@ export const ContainerModal = observer(({isOpen, onClose}: BaseModalProps) => {
                 </div>
             )}
             onSave={(updatedConfig) => {
-                updatedConfig.machines = selectedMachines;
+                updatedConfig.machine_ids = selectedMachineIds;
                 delete (updatedConfig as any).id
                 delete (updatedConfig as any).created_at
                 delete (updatedConfig as any).updated_at

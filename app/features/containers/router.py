@@ -4,6 +4,7 @@ from typing import Dict, Any
 from pydantic import BaseModel
 from app.dependencies import get_session
 from app.models import Container
+from app.features.machines.manager import MachineManager
 from app.extensions import docker_orchestrator
 from app.core.responses import response_template
 from .manager import ContainerManager
@@ -112,9 +113,9 @@ def deploy_container(
     session: Session = Depends(get_session),
     ):
     
-    machines = data.pop("machines")
+    machine_ids = data.pop("machine_ids")
+    MachineManager.deploy_container(machine_ids, data, session, background_tasks)
     
-    ContainerManager.create(machines, data, background_tasks)
     
     
     

@@ -20,7 +20,7 @@ export const MachinePage = observer(() => {
                     : machineStore.machines.map((machine, key) => {
                         return <MachineCard machine={machine} key={key}>
                             {containerStore.getByMachine(machine.id).map((container) => {
-                                return <ContainerRow key={container.id} container={container} />
+                                return <ContainerRow key={container.id} container={container} disabled={!machine.is_online}/>
                             })}
                         </MachineCard>
                     })}

@@ -83,7 +83,7 @@ export const MachineCard = observer(({machine, children}: MachineCardProps) => {
                 <div className="flex flex-row">
                     <VscVscode className={`${ICON_CLASS}`}
                     onClick={(e) => {e.stopPropagation(); machineStore.openVSCode(machine.id);}}/>
-                    <GrUpgrade className={`${ICON_CLASS}`} onClick={() => machineStore.updateMachine(machine)}/>
+                    <GrUpgrade className={`${ICON_CLASS}`} onClick={(e) => {e.stopPropagation();machineStore.updateMachine(machine)}}/>
                 </div>
                 <GrStatusGoodSmall className="w-8 h-8 shrink-0" color={machine.is_online ? "green" : "red"}/>
                 <FaTrash className={`${ICON_CLASS}`} onClick={(e) =>{e.stopPropagation(); machineStore.delete(machine.id)}}/>

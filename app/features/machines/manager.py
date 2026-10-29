@@ -14,6 +14,7 @@ from app.core.exceptions import (MachineConnectionError, UnsupportedMachineOS, M
                                  MachineDoesNotExist, MissingProjectFields, ProjectDoesNotExist)
 from app.features.vscode.command import launch_vscode
 from app.features.tailscale_manager.tailscale_manager import TailscaleManager
+from app.config import Settings, get_settings
 import requests
 OS_HANDLERS = {
         "windows" : WindowsOS(),
@@ -64,7 +65,18 @@ class MachineManager:
                     response = await client.get(f"http://{host.strip()}:8001/")
                     machine.is_online = (response.status_code == 200)
                 except (httpx.RequestError, httpx.HTTPStatusError):
-                    machine.is_online = False
+                    try:
+                        # check if tailscale is not communicating due to key expiration
+                        # if can't connect to machine over ssh then the address changed or the machine is offline, skip tailscale check
+                        with SSHClientContextManager(address=machine.address, port=machine.port, username=machine.user, keypath=get_settings().key_path) as sshConn:
+                            ts = TailscaleManager(tags=["tag:homelab-core"])
+                            # generate new tailscale_ip
+                            # NOTE: may want to reconsider design if containers run on the machine's tailscale address
+                            # maybe restart the containers with the updated tailscale address or hand out permanent keys instead of ephemeral
+                            machine.tailscale_ip = ts.add_to_tailnet(ssh_conn=sshConn, os_handler=OS_HANDLERS.get(machine.os_type), hostname=machine.user)
+                    except Exception as ssh_err:
+                        print("SSH recover failed", ssh_err)
+                        machine.is_online = False
                 
                 session.add(machine)
 
@@ -152,7 +164,7 @@ class MachineManager:
 
    
 
-    def scan_network(target_machines, subnet="10.0.0", num_threads=30):
+    def scan_network(target_machines, session: Session, subnet: str ="10.0.0", num_threads: int =30):
         q = queue.Queue()
         stop_event = threading.Event()
         target_lock = threading.Lock()
@@ -176,6 +188,11 @@ class MachineManager:
                         with target_lock:
                             found_machines.add(machine["user"])
                             print(f"{machine["user"]}@{ip}:{machine["port"]}")
+                            db_machine = session.exec(select(Machine).where(Machine.id == machine["id"])).one_or_none()
+                            if db_machine and (db_machine.address != ip):
+                                
+                                db_machine.address = ip
+                                session.add(db_machine)
                             if len(found_machines) == len(target_machines):
                                 stop_event.set()
               
@@ -189,6 +206,7 @@ class MachineManager:
             t.join()
         print(found_machines)
         print("scan complete!")
+        session.commit()
     
     @staticmethod
     def get_usage(machine_id, session: Session):

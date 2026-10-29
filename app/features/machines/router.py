@@ -75,7 +75,7 @@ async def scan_machine_connections(session: Session = Depends(get_session)):
     
     # Convert ORM objects to plain dicts so threads don't touch active session instances
     target_data = [{"id": m.id, "user": m.user, "port": m.port} for m in db_machines]
-    await asyncio.to_thread(MachineManager.scan_network, target_data)
+    await asyncio.to_thread(MachineManager.scan_network, target_data, session)
     
     return response_template(status=200, message="Subnet scan complete")
 

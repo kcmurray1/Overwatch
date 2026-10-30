@@ -3,7 +3,7 @@ from sqlmodel import Session, select, delete
 from typing import Dict, Any
 from pydantic import BaseModel
 from app.dependencies import get_session
-from app.models import Container
+from app.models import Container, Machine
 from app.features.machines.manager import MachineManager
 from app.extensions import docker_orchestrator
 from app.core.responses import response_template
@@ -79,7 +79,23 @@ async def update_container(data: DockerEvent, session: Session = Depends(get_ses
     print(data.attrs)
     container = session.exec(select(Container).where(Container.docker_id == container_id)).one_or_none()
     if not container:
-        return
+        machine_obj = None
+        if data.attrs["NetworkSettings"]["Ports"]:
+            for port, bindings in data.attrs["NetworkSettings"]["Ports"].items():
+                tailscale_ip = bindings[0].get("HostIp")
+                machine_obj = session.exec(select(Machine).where(Machine.tailscale_ip == tailscale_ip)).one_or_none()
+        
+        if not machine_obj:
+            return
+                    
+        session.add(Container(
+                docker_id=container_id,
+                image=data.attrs.get("Image"),
+                name=data.attrs.get("Name","").lstrip("/"),
+                config=data.attrs,
+                state=data.attrs["State"]["Status"],
+                machine_id=machine_obj.id))
+        
     
     if action == DockerActionType.DESTROY:
         print("removing container")

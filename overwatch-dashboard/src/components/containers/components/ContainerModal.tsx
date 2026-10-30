@@ -90,6 +90,29 @@ const ContainerForm = observer(({config, update}: {config: ContainerConfig, upda
             </div>
             )
             }
+            {config.spec && ( 
+                <div>
+                <h3 className="font-bold">Volumes</h3>
+                <div className="grid grid-cols-2 p-2">
+                {Object.entries(config.spec.volumes || {}).map(([key, val], index) => {
+                if (typeof val === 'string') {
+                        return <TextField
+                        key={index}
+                        label={key}
+                        value={val}
+                        onChange={(newVal) => update((draft) => {
+                            if (draft.spec.volumes) {
+                                draft.spec.volumes[key] = newVal
+                            }
+                        })}
+                        />
+                    }
+                   
+                })}
+                </div>
+            </div>
+            )
+            }
 
             </div>
    
@@ -212,6 +235,7 @@ export const ContainerModal = observer(({isOpen, onClose}: BaseModalProps) => {
                 </div>
             )}
             onSave={(updatedConfig) => {
+                // remove template metadata when creating a container
                 updatedConfig.machine_ids = selectedMachineIds;
                 delete (updatedConfig as any).id
                 delete (updatedConfig as any).created_at

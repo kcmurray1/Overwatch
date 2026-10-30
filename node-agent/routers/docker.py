@@ -42,6 +42,15 @@ def create_container(
 ):
     try:
         logger.info(data)
+        if "ports" in data and isinstance(data["ports"], dict):
+            normalized_ports = {}
+            logger.info("normalizing ports")
+            for container_port, binding in data["ports"].items():
+                # If the JSON parsed a host/port binding as a list, convert it to a tuple for Docker SDK
+                normalized_ports[container_port] = tuple(binding.split(':'))
+                    
+            data["ports"] = normalized_ports
+
         container = client.containers.create(**data)
         
         return {"status": "success", "message": f"Container {container.id} created"}

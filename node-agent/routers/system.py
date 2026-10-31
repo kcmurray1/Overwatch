@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter
 import threading
 import psutil
 import logging
@@ -69,22 +69,39 @@ class UsageMonitor:
             drives = []
             for disk in psutil.disk_partitions(all=False):
                 try:
+                    raw_usage = psutil.disk_usage(disk.mountpoint)._asdict()
+                    
+                    # 1. Get formatted display values
                     disk_usage = cls.format_stat(
-                        psutil.disk_usage(disk.mountpoint)._asdict(),
+                        raw_usage,
                         ByteConverter.decimal.to_terabyte,
                     )
                     disk_usage["drive"] = disk.device
                     disk_usage["mountpoint"] = disk.mountpoint
+                    
+                    # 2. Add raw numeric values in GB for zero-cost control plane aggregation
+                    disk_usage["total_gb"] = round(ByteConverter.decimal.to_gigabyte(raw_usage.get("total", 0)), 2)
+                    disk_usage["used_gb"] = round(ByteConverter.decimal.to_gigabyte(raw_usage.get("used", 0)), 2)
+                    disk_usage["free_gb"] = round(ByteConverter.decimal.to_gigabyte(raw_usage.get("free", 0)), 2)
+                    
                     drives.append(disk_usage)
                 except Exception:
                     continue
 
+            raw_mem = psutil.virtual_memory()._asdict()
+            formatted_mem = cls.format_stat(
+                raw_mem,
+                ByteConverter.binary.to_tebibyte,
+            )
+            
+            # Inject raw numeric values into memory stats for the control plane
+            formatted_mem["total_gb"] = round(ByteConverter.binary.to_gibibyte(raw_mem.get("total", 0)), 2)
+            formatted_mem["used_gb"] = round(ByteConverter.binary.to_gibibyte(raw_mem.get("used", 0)), 2)
+            formatted_mem["free_gb"] = round(ByteConverter.binary.to_gibibyte(raw_mem.get("free", 0)), 2)
+
             cls._latest_stats = {
                 "cpu": psutil.cpu_percent(interval=1),
-                "memory": cls.format_stat(
-                    psutil.virtual_memory()._asdict(),
-                    ByteConverter.binary.to_tebibyte,
-                ),
+                "memory": formatted_mem,
                 "drives": drives,
             }
 

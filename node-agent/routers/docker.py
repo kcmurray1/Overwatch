@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 import docker
 from typing import Dict, Any
-from docker.errors import APIError, NotFound
+from docker.errors import APIError, NotFound, ImageNotFound
 import logging
 router = APIRouter(
     prefix="/containers",
@@ -46,10 +46,18 @@ def create_container(
             normalized_ports = {}
             logger.info("normalizing ports")
             for container_port, binding in data["ports"].items():
+                
                 # If the JSON parsed a host/port binding as a list, convert it to a tuple for Docker SDK
+                if not isinstance(binding, str):
+                    continue
                 normalized_ports[container_port] = tuple(binding.split(':'))
-                    
-            data["ports"] = normalized_ports
+            if normalized_ports:
+                data["ports"] = normalized_ports
+        
+        try:
+            client.images.get(data.get("image"))
+        except ImageNotFound:
+            client.images.pull(data.get("image"))
 
         container = client.containers.create(**data)
         

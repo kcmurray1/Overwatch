@@ -304,10 +304,7 @@ class MachineManager:
                     config_str = config_str.replace(f'{{{{{token}}}}}', machine_dict.get(token))
             
             return json.loads(config_str)
-                    
-            
-            
-        
+
         for machine_object in machine_objects:
                 config = hydrate(data.get("spec"), machine_object.model_dump())
                 background_tasks.add_task(
@@ -317,6 +314,95 @@ class MachineManager:
                     endpoint=f"containers/create",
                     data=config
                 )
+                
+    @staticmethod
+    async def telemetry(id, session: Session):
+        """
+        Get cpu, memory, and storage usage of single machine or all active registered machines
+        """
+       
+        
+        async def fetch_agent_stats(client: httpx.AsyncClient, machine: Machine) -> dict:
+            if not machine.tailscale_ip:
+                raise ValueError("No valid Tailscale address configured")
+                
+            response = await client.get(f"http://{machine.tailscale_ip}:8001/system/usage", timeout=3.0)
+            response.raise_for_status()
+            return response.json()
+        def parse_gb(val_str: str) -> float:
+                if not val_str:
+                    return 0.0
+                return float(val_str.replace("GB", "").strip())
+            
+        async with httpx.AsyncClient() as client:
+            if id is not None:
+                machine = session.get(Machine, id)
+                try:
+                    stats = await fetch_agent_stats(client, machine)
+                    return {"id": machine.id, "name": machine.user, "online": True, "stats": stats}
+                except Exception as e:
+                    return {"id": machine.id, "name": machine.name, "online": False, "error": str(e)}
+    
+            # Case 2: Aggregate / All machines requested
+            machines = session.exec(select(Machine)).all()
+            if not machines:
+                return {"individual": [], "aggregate": {}}
+
+            tasks = [fetch_agent_stats(client, m) for m in machines]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+            individual_stats = []
+            total_cpu = 0.0
+            total_ram_used_gb = 0.0
+            total_ram_total_gb = 0.0
+            total_storage_used_gb = 0.0
+            total_storage_total_gb = 0.0 
+            online_count = 0
+
+            for machine, result in zip(machines, results):
+                if isinstance(result, Exception):
+                    individual_stats.append({
+                        "id": machine.id, 
+                        "name": machine.user, 
+                        "online": False, 
+                        "error": str(result)
+                    })
+                else:
+                    online_count += 1
+                   
+                    individual_stats.append({
+                        "id": machine.id, 
+                        "name": machine.user, 
+                        "online": True, 
+                        "stats": result
+                    })
+                    
+                    total_cpu += result.get("cpu", 0.0)
+                    
+                    if "memory" in result:
+                        mem = result["memory"]
+                        total_ram_used_gb += mem.get("used_gb", 0.0)
+                        total_ram_total_gb += mem.get("total_gb", 0.0)
+                    if "drives" in result:
+                        for drive in result["drives"]:
+                            total_storage_used_gb += drive.get("used_gb", 0.0)
+                            total_storage_total_gb += drive.get("total_gb", 0.0)
+
+            aggregate_metrics = {
+                "total_machines": len(machines),
+                "online_machines": online_count,
+                "avg_cpu_percent": round(total_cpu / online_count, 1) if online_count > 0 else 0.0,
+                "total_ram_used_gb": round(total_ram_used_gb, 2),
+                "total_ram_total_gb": round(total_ram_total_gb, 2),
+                "total_storage_used_gb": round(total_storage_used_gb, 2),
+                "total_storage_total_gb": round(total_storage_total_gb, 2),
+            }
+
+            return {
+                "individual": individual_stats,
+                "aggregate": aggregate_metrics
+            }
+                
 
         
 

@@ -79,3 +79,8 @@ async def scan_machine_connections(session: Session = Depends(get_session)):
     
     return response_template(status=200, message="Subnet scan complete")
 
+@router.get("/stats")
+async def get_machine_stats(id: Optional[int] = None, session: Session = Depends(get_session)):
+    stats = await MachineManager.telemetry(id, session)
+    return response_template(status=200, message="complete", data=stats)
+

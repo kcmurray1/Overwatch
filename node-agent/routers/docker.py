@@ -34,6 +34,19 @@ def get_container(
         raise HTTPException(status_code=404, detail=f"Container '{container_id}' not found")
     except APIError as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+    
+@router.delete("/{container_id}")
+def delete_container(container_id, client: docker.DockerClient = Depends(get_docker_client)):
+    try:
+        container = client.containers.get(container_id)
+        container.remove(force=True, v=True)
+        return {"success": True, "message": f"Container '{container_id}' successfully deleted."}
+    except NotFound:
+        raise HTTPException(status_code=404, detail=f"Container '{container_id}' not found")
+    except APIError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 @router.post("/create")
 def create_container(

@@ -92,8 +92,35 @@ class ContainerManager:
         # return ok or something
         return {"status": "accepted"}
     
-    def delete(id):
-        return NotImplementedError
+    def restart(id, session: Session, background_tasks: BackgroundTasks):
+        container = session.exec(select(Container).where(Container.id == id).options(selectinload(Container.machine))).one_or_none()
+        if not container:
+            return "Container does not exist"
+        
+        background_tasks.add_task(
+            ContainerManager.send_agent_request,
+            address=container.machine.tailscale_ip,
+            method="POST",
+            endpoint=f"containers/{container.docker_id}/restart"
+        )
+        return "accepted"
+    
+    def delete(id, session: Session, background_tasks: BackgroundTasks):
+        container = session.get(Container, id)
+        if not container:
+           return "Container does not exist"
+
+        # 2. Queue the background request to the agent using the fetched relationship
+        background_tasks.add_task(
+            ContainerManager.send_agent_request,
+            address=container.machine.tailscale_ip,
+            method="DELETE",
+            endpoint=f"containers/{container.docker_id}" # or container.name depending on what your agent expects
+        )
+
+        # 3. Delete the record from the control plane DB in one lookup
+        session.delete(container)
+        session.commit()
     
     
     def list_containers(session: Session):

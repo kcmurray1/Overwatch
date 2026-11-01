@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, Request
 from sqlmodel import Session, select, delete
 from typing import Dict, Any
 from pydantic import BaseModel
@@ -26,17 +26,15 @@ def create_container(project_data: Dict[str, Any], session:Session = Depends(get
 
     return response_template(200, "ok", new_container)
 
-# @router.get("/{id}")
-# async def read_container(id, session: Session = Depends(get_session)):
-#     project = docker_orchestrator.get_(id, session=session)
-
-#     return response_template(200, "ok", project)
 
 @router.delete("/{id}")
-async def delete_container(id, session: Session = Depends(get_session)):
-    removed_project = docker_orchestrator.remove_container(id, session)
+async def delete_container(
+    id,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session)):
+    ContainerManager.delete(id, session, background_tasks)
 
-    return response_template(200, "ok", removed_project)
+    return response_template(200, "ok")
 
 @router.post("/{id}/start")
 async def start_container(
@@ -57,6 +55,14 @@ async def stop_container( id,
     
     return response_template(200, "ok")
 
+@router.post("/{id}/restart")
+async def restart_container(
+    id,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session)):
+    result = ContainerManager.restart(id, session, background_tasks)
+    return response_template(200, result)
+
 
 class DockerActionType:
     START = "start" # connect, start
@@ -73,28 +79,30 @@ class DockerEvent(BaseModel):
                 
 
 @router.post("/event")
-async def update_container(data: DockerEvent, session: Session = Depends(get_session)):
+async def update_container(data: DockerEvent, request: Request, session: Session = Depends(get_session)):
     action = data.action
     container_id = data.container_id
-    print(data.attrs)
+    # print(data.attrs)
     container = session.exec(select(Container).where(Container.docker_id == container_id)).one_or_none()
-    if not container:
+    if not container and action != DockerActionType.DESTROY and action != "kill":
         machine_obj = None
-        if data.attrs["NetworkSettings"]["Ports"]:
-            for port, bindings in data.attrs["NetworkSettings"]["Ports"].items():
-                tailscale_ip = bindings[0].get("HostIp")
-                machine_obj = session.exec(select(Machine).where(Machine.tailscale_ip == tailscale_ip)).one_or_none()
+        local_address = request.client.host
+        print(data.host_address, local_address)
+        machine_obj = session.exec(select(Machine).where(Machine.tailscale_ip == local_address)).one_or_none()
         
         if not machine_obj:
+            print("no machine object")
             return
-                    
-        session.add(Container(
+        
+        container = Container(
                 docker_id=container_id,
                 image=data.attrs.get("Image"),
                 name=data.attrs.get("Name","").lstrip("/"),
                 config=data.attrs,
                 state=data.attrs["State"]["Status"],
-                machine_id=machine_obj.id))
+                machine_id=machine_obj.id)
+                    
+        session.add(container)
         
     
     if action == DockerActionType.DESTROY:
@@ -131,10 +139,7 @@ def deploy_container(
     
     machine_ids = data.pop("machine_ids")
     MachineManager.deploy_container(machine_ids, data, session, background_tasks)
-    
-    
-    
-    
+       
     print(data)
     
     return response_template(201, "created")

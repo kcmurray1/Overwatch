@@ -7,9 +7,14 @@ import { ContainerPage } from "../containers/ContainerPage"
 
 
 export const Home = observer(() => {
+
     useEffect(() => {
         syncStore.poll();
-        return () => syncStore.stopPolling(); // Cleanup on unmount
+        syncStore.telemetry();
+        return () => { 
+            syncStore.stopPolling();
+            syncStore.stopTelemetry();
+        }// Cleanup on unmount
     }, []);
     return (
         <>

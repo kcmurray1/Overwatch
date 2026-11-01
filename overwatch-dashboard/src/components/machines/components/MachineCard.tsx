@@ -1,11 +1,13 @@
 import { observer } from "mobx-react-lite";
 import { BaseCard } from "../../common/BaseCard";
 import { GrStatusGoodSmall, GrStatusUnknown, GrUpgrade } from "react-icons/gr";
-import { FaLinux, FaTrash, FaWindows } from "react-icons/fa";
+import { FaLinux, FaPray, FaTrash, FaWindows } from "react-icons/fa";
 import { machineStore } from "../../../stores/MachineStore";
 import type { IMachine } from "../../../types/machines";
 import { useState } from "react";
 import { VscVscode } from "react-icons/vsc";
+import { syncStore } from "../../../stores/SyncStore";
+import { MachineTelemetry } from "./telemetry";
 
 export const MachineInfo = observer(({ machine }: { machine: IMachine }) => {
     return (
@@ -61,6 +63,47 @@ const MachineNetwork = observer(({machine}: {machine: IMachine}) => {
     );
 })
 
+const MachineStatsCard = observer(({machine} : {machine: IMachine}) => {
+    const stats = syncStore.individualMap.get(machine.id);
+
+    const formatStorage = (gb: number) => {
+        if (gb >= 1000) {
+            return `${(gb / 1000).toFixed(2)}TB`;
+        }
+        return `${gb.toFixed(1)}GB`;
+    };
+
+    return (<>
+       {stats && <div className="grid grid-cols-2 p-2">
+        <MachineTelemetry 
+        avg_cpu_percent={stats.stats.cpu}  
+        total_ram={stats.stats.memory.total_gb}
+        used_ram={stats.stats.memory.used_gb}
+        />
+        <div>
+            <div className="grid grid-cols-3 items-center gap-3">
+                <span className="text-blue-400">Mount</span>
+                <span>Device</span>
+                <span>Capacity</span>
+
+            </div>
+            {stats.stats.drives.map((drive, index) => {
+                return <div className="grid grid-cols-3 items-center gap-3" key={index}>
+                    <span className="font-mono font-medium text-blue-400 text-sm">{drive.mountpoint}</span>
+                    <span className="font-mono truncate max-w-[150px]" title={drive.drive}>
+                        {drive.drive}
+                    </span>
+                    <div className="flex items-center">
+                    <p>{formatStorage(drive.used_gb)}/{formatStorage(drive.total_gb)}</p>
+                    <span className="text-xs text-gray-400 ml-1">({Math.round((drive.used_gb/drive.total_gb) * 100)}%)</span>
+                    </div>
+                </div>
+            })}
+        </div>
+        </div>}
+    </>)
+})
+
 
 interface MachineCardProps {
     machine: IMachine
@@ -72,7 +115,7 @@ export const MachineCard = observer(({machine, children}: MachineCardProps) => {
     const OS_LOGO_SIZE = 50;
     const ICON_CLASS = "w-8 h-8 text-slate-200 hover:text-accent-light transition-colors"
     return (
-        <div>
+        <div className="border-10 border-primary-dark">
             <div onClick={() => setIsOpen(!isOpen)}>
             <BaseCard className="grid grid-cols-7 bg-primary-light dark:bg-primary-dark">
                 <MachineInfo machine={machine}/>
@@ -87,8 +130,11 @@ export const MachineCard = observer(({machine, children}: MachineCardProps) => {
                 </div>
                 <GrStatusGoodSmall className="w-8 h-8 shrink-0" color={machine.is_online ? "green" : "red"}/>
                 <FaTrash className={`${ICON_CLASS}`} onClick={(e) =>{e.stopPropagation(); machineStore.delete(machine.id)}}/>
-            
+                
             </BaseCard>
+            <div className="bg-surface-dark">
+                {isOpen && <MachineStatsCard machine={machine} />}
+            </div>
             </div>
             {isOpen && (children)}
         </div>

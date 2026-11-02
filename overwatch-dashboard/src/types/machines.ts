@@ -21,7 +21,7 @@ export interface IDockerContainer {
     machine_id: number
     name: string
     state: string
-    primary_url: string
+    address: string
 }
 
 

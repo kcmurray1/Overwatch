@@ -1,6 +1,6 @@
 import type { IDockerContainer } from "../../types/machines";
 import { CustomApiRequest, type MessageOnlyResponse } from "../../FetchAPI";
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 
 
 export class ObservableContainerModel implements IDockerContainer {
@@ -11,7 +11,7 @@ export class ObservableContainerModel implements IDockerContainer {
     machine_id!: number;
     name!: string;
     state!: string;
-    primary_url!: string;
+    address!: string;
 
     error: string | null = null;
 
@@ -28,6 +28,18 @@ export class ObservableContainerModel implements IDockerContainer {
 
     get isRunning() {
         return this.state === "running";
+    }
+
+    async updateAddress(newAddress: string) {
+         try{
+            await CustomApiRequest<MessageOnlyResponse>(`containers/${this.id}`, {address: newAddress}, "PATCH");        
+            runInAction(() => {  
+                this.address = newAddress;
+            });
+        } catch(err) {
+           console.error('failed to update address', err);
+        }
+
     }
 
 

@@ -26,6 +26,20 @@ def create_container(project_data: Dict[str, Any], session:Session = Depends(get
 
     return response_template(200, "ok", new_container)
 
+@router.patch("/{id}")
+async def update_container(
+    id: int,
+    container_update: dict,
+    session: Session = Depends(get_session)
+):
+    db_container = session.get(Container, id)
+    db_container.sqlmodel_update(container_update)
+    
+    session.add(db_container)
+    session.commit()
+    session.refresh(db_container)
+
+    return db_container
 
 @router.delete("/{id}")
 async def delete_container(

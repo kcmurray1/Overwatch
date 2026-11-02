@@ -30,7 +30,8 @@ async def list_machines(
         container_data = []
         for container in machine.containers:
             container_dict = container.model_dump()
-            container_dict["primary_url"] = ContainerUtils.get_url(container_dict["config"], machine.tailscale_ip)
+            # dynamically build container address if one was not generated during creation or set manually by user
+            container_dict["address"] = container.address if container.address else ContainerUtils.get_url(container_dict["config"], machine.tailscale_ip)
             container_data.append(container_dict)
         machine_dict["containers"] = container_data
         

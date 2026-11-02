@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { BaseCard } from "../../common/BaseCard";
-import { GrStatusGoodSmall, GrStatusUnknown, GrUpgrade } from "react-icons/gr";
+import { GrPowerShutdown, GrStatusGoodSmall, GrStatusUnknown, GrUpgrade } from "react-icons/gr";
 import { FaLinux, FaPray, FaTrash, FaWindows } from "react-icons/fa";
 import { machineStore } from "../../../stores/MachineStore";
 import type { IMachine } from "../../../types/machines";
@@ -123,10 +123,11 @@ export const MachineCard = observer(({machine, children}: MachineCardProps) => {
                 {machine.os_type === "windows" ? <FaWindows size={OS_LOGO_SIZE} /> 
                 : machine.os_type === "linux" ? <FaLinux size={OS_LOGO_SIZE} /> 
                 : <GrStatusUnknown className={`${ICON_CLASS}`}/>}
-                <div className="flex flex-row">
+                <div className="flex flex-row gap-2">
                     <VscVscode className={`${ICON_CLASS}`}
-                    onClick={(e) => {e.stopPropagation(); machineStore.openVSCode(machine.id);}}/>
+                        onClick={(e) => {e.stopPropagation(); machineStore.openVSCode(machine.id);}}/>
                     <GrUpgrade className={`${ICON_CLASS}`} onClick={(e) => {e.stopPropagation();machineStore.updateMachine(machine)}}/>
+                    <GrPowerShutdown className={`${ICON_CLASS}`} onClick={(e) => {e.stopPropagation();}}/>
                 </div>
                 <GrStatusGoodSmall className="w-8 h-8 shrink-0" color={machine.is_online ? "green" : "red"}/>
                 <FaTrash className={`${ICON_CLASS}`} onClick={(e) =>{e.stopPropagation(); machineStore.delete(machine.id)}}/>

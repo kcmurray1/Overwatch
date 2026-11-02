@@ -8,6 +8,7 @@ class ContainerBase(SQLModel):
     docker_id: Optional[str] = Field(default=None, unique=True)
     image: str
     name: str = Field(unique=True)
+    address: Optional[str] = Field(default=None, nullable=True)
     config: Dict = Field(
         default_factory=dict,
         sa_column=Column(MutableDict.as_mutable(JSON), default=dict)

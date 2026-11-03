@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
-import { machineStore } from "../../../../../stores/MachineStore";
+import { machineStore } from "../../../MachineStore";
 import { BaseModal, type BaseModalProps } from "../../../../common/BaseModal";
 
 export const AddMachineModal = observer(({isOpen, onClose}: BaseModalProps) => {

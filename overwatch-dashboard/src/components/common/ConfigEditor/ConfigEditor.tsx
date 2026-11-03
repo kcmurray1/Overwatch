@@ -91,7 +91,7 @@ export const GenericConfigEditor = observer(
                 disabled={!!store.jsonError}
                 className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-300 disabled:opacity-50 text-white text-xs font-bold rounded"
               >
-                Save Changes
+                Deploy
               </button>
             )}
             {<button

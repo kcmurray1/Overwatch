@@ -69,12 +69,4 @@ export class ObservableContainerModel implements IDockerContainer {
 
         }
     }
-
-    async delete() {
-        try {
-            const response = await CustomApiRequest<MessageOnlyResponse>(`containers/${this.id}`, null, "DELETE");
-        } catch(err) {
-
-        }
-    }
 }

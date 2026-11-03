@@ -1,7 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import { CustomApiRequest, type AddMachineResponse, type GetAllMachinesResponse, type MessageOnlyResponse, type VsCodeResponse } from "../FetchAPI";
-import type { IMachine } from "../types/machines";
-import { containerStore } from "./ContainerStore";
+import { CustomApiRequest, type AddMachineResponse, type GetAllMachinesResponse, type MessageOnlyResponse, type VsCodeResponse } from "../../FetchAPI";
+import type { IMachine } from "../../types/machines";
+import { containerStore } from "../containers/ContainerStore";
 
 export class MachineStore {
     machineMap = new Map<Number, IMachine>();

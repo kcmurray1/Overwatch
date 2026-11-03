@@ -1,6 +1,6 @@
 import { makeAutoObservable, ObservableMap, runInAction } from "mobx";
-import { machineStore } from "./MachineStore";
-import { containerStore } from "./ContainerStore";
+import { machineStore } from "../components/machines/MachineStore";
+import { containerStore } from "../components/containers/ContainerStore";
 import type { IMachine } from "../types/machines";
 import { CustomApiRequest, type APIResponse, type GetAllMachinesResponse } from "../FetchAPI";
 import type { AggregateStats, MachineTelemetry } from "../components/machines/types/telemetry";
@@ -58,6 +58,7 @@ export class SyncStore {
 
     telemetry() {
         if (this.telemetryIntervalId) return;
+        this.fetchTelemetryData();
         this.telemetryIntervalId = setInterval(() => {
             this.fetchTelemetryData();
         }, 3000);

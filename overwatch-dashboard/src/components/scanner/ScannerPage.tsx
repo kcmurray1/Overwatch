@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { machineStore } from "../../stores/MachineStore";
+import { machineStore } from "../machines/MachineStore";
 import { useState } from "react";
 import { CustomApiRequest, type MessageOnlyResponse } from "../../FetchAPI";
 
@@ -22,10 +22,12 @@ export const ScannerPage = observer(() => {
 
     return (
         <div className="flex flex-col p-4 bg-primary-light dark:bg-primary-dark">
-            <div className="flex items-center p-4 justify-between">
+            <div className="flex gap-2 items-center p-4 justify-between">
                 <div>
                     <h1 className="text-lg font-semibold text-slate-100">Network Scanner</h1>
-                    <p className="text-xs">Review active machine IP addresses and ports</p>
+                    <p className="text-xs">Review active machine IP addresses and ports. <br/>
+                        Automatically updates port and address if they changed
+                    </p>
                 </div>
                 <button onClick={handleRunScan} className="p-2 rounded-xl bg-accent-light dark:bg-accent-dark  hover:bg-select-light dark:hover:bg-select-dark transition-colors">Scan</button>
             </div>

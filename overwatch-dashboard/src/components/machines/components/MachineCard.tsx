@@ -2,7 +2,7 @@ import { observer } from "mobx-react-lite";
 import { BaseCard } from "../../common/BaseCard";
 import { GrPowerShutdown, GrStatusGoodSmall, GrStatusUnknown, GrUpgrade } from "react-icons/gr";
 import { FaLinux, FaPray, FaTrash, FaWindows } from "react-icons/fa";
-import { machineStore } from "../../../stores/MachineStore";
+import { machineStore } from "../MachineStore";
 import type { IMachine } from "../../../types/machines";
 import { useState } from "react";
 import { VscVscode } from "react-icons/vsc";

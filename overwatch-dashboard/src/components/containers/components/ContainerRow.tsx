@@ -9,6 +9,7 @@ import { RiRestartLine } from "react-icons/ri";
 import { TiDelete } from "react-icons/ti";
 import { useState } from "react";
 import { CiSquareCheck, CiSquareRemove } from "react-icons/ci";
+import { containerStore } from "../ContainerStore";
 
 interface ContainerAddressProps {
     initialAddress: string | null;
@@ -115,7 +116,7 @@ export const ContainerRow = observer(({ container, disabled = false} : Container
                 </div>
                 <GrStatusGoodSmall className="shrink-0" color={container.state === "running" ? "green" : "red"}/>
                 <div className="border-l-2 border-primary-dark pl-5 flex items-center">
-                <TiDelete onClick={() => container.delete()}/>
+                <TiDelete onClick={() => containerStore.delete(container.id)}/>
                 </div>
             </div>
         </BaseCard>

@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite"
-import { containerStore } from "../../stores/ContainerStore"
+import { containerStore } from "./ContainerStore"
 import { FaPlay, FaPlus, FaStop } from "react-icons/fa"
 import { ContainerRow } from "./components/ContainerRow"
 import { ContainerModal } from "./components/ContainerModal"

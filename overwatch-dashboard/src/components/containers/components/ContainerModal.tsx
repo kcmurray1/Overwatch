@@ -3,8 +3,8 @@ import { useState } from "react";
 import { BaseModal, type BaseModalProps } from "../../common/BaseModal";
 import { GenericConfigEditor } from "../../common/ConfigEditor/ConfigEditor";
 import type { ContainerConfig } from "../types/configs";
-import { containerStore } from "../../../stores/ContainerStore";
-import { machineStore } from "../../../stores/MachineStore";
+import { containerStore } from "../ContainerStore";
+import { machineStore } from "../../machines/MachineStore";
 import { TextField } from "../../common/ConfigEditor/components/TextField";
 import { NumberField } from "../../common/ConfigEditor/components/NumberField";
 
@@ -90,23 +90,30 @@ const ContainerForm = observer(({config, update}: {config: ContainerConfig, upda
             </div>
             )
             }
-            {config.spec && ( 
+            {config.spec.volumes && ( 
                 <div>
                 <h3 className="font-bold">Volumes</h3>
-                <div className="grid grid-cols-2 p-2">
-                {Object.entries(config.spec.volumes || {}).map(([key, val], index) => {
-                if (typeof val === 'string') {
-                        return <TextField
+                <div className="grid p-2 ">
+                {Object.entries(config.spec.volumes || {}).map(([hostPath, volConfig], index) => {
+                
+                    return <TextField
                         key={index}
-                        label={key}
-                        value={val}
-                        onChange={(newVal) => update((draft) => {
-                            if (draft.spec.volumes) {
-                                draft.spec.volumes[key] = newVal
+                        label="Host Volume Path"
+                        value={hostPath}
+                        onChange={(newHostPath) => update((draft) => {
+                            if (draft.spec.volumes && hostPath !== newHostPath) {
+                                // 1. Copy the existing bind config object
+                                const currentConfig = draft.spec.volumes[hostPath];
+                                
+                                // 2. Delete the old key entry
+                                delete draft.spec.volumes[hostPath];
+                                
+                                // 3. Assign the config to the new host path key
+                                draft.spec.volumes[newHostPath] = currentConfig;
                             }
                         })}
-                        />
-                    }
+                    />
+                    
                    
                 })}
                 </div>

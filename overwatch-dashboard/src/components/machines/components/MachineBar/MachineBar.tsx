@@ -2,7 +2,7 @@ import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { FaPlay, FaPlus, FaStop } from "react-icons/fa";
 import { AddMachineModal } from "./components/AddMachineModal";
-import { machineStore } from "../../../../stores/MachineStore";
+import { machineStore } from "../../MachineStore";
 
 export const MachineBar = observer(() => {
 

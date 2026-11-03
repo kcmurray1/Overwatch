@@ -1,11 +1,11 @@
 import { observer } from "mobx-react-lite";
 import { useEffect } from "react";
 import { syncStore } from "../../stores/SyncStore";
-import { machineStore } from "../../stores/MachineStore";
+import { machineStore } from "./MachineStore";
 import { MachineCard } from "./components/MachineCard";
 import { MachineBar } from "./components/MachineBar/MachineBar";
 import { ContainerRow } from "../containers/components/ContainerRow";
-import { containerStore } from "../../stores/ContainerStore";
+import { containerStore } from "../containers/ContainerStore";
 
 export const MachinePage = observer(() => {
     useEffect(() => {

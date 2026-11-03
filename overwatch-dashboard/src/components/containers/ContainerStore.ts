@@ -1,8 +1,8 @@
 import { makeAutoObservable, ObservableMap, runInAction } from "mobx";
-import type { IDockerContainer } from "../types/machines";
-import { ObservableContainerModel } from "../components/containers/ContainerModel";
-import type { ContainerConfig } from "../components/containers/types/configs";
-import { CustomApiRequest, type GetAllContainerConfigs } from "../FetchAPI";
+import type { IDockerContainer } from "../../types/machines";
+import { ObservableContainerModel } from "./ContainerModel";
+import type { ContainerConfig } from "./types/configs";
+import { CustomApiRequest, type GetAllContainerConfigs, type MessageOnlyResponse } from "../../FetchAPI";
 
 export class ContainerStore {
     containerMap = new ObservableMap<Number, ObservableContainerModel>();
@@ -53,9 +53,16 @@ export class ContainerStore {
 
 
     async delete(id: number) {
+        try {
+            await CustomApiRequest<MessageOnlyResponse>(`containers/${id}`, null, "DELETE");
+            runInAction(() => {
+                this.containerMap.delete(id);
+            })
+           
+        } catch(err) {
 
+        }
     }
-
     get containers(): ObservableContainerModel[] {
         return Array.from(this.containerMap.values());
     }

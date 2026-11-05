@@ -7,9 +7,16 @@ import json
 from pathlib import Path
 from sqlmodel import Session, select
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import get_settings
+import logging
+
+
+from app.logger import setup_logging
+LOGGING_CONFIG =setup_logging(config_path="app/core/configs/logger.json")
+logger = logging.getLogger(__name__)
+
+from app.core.configs.settings import get_settings
 from app.features.machines.manager import MachineManager
-from .dependencies import engine, get_session
+from .core.configs.db import engine, get_session
 from .features.containers import router as container_router
 from .features.machines import router as machine_router
 from .features.agent import router as agent_router
@@ -17,13 +24,15 @@ from app.core.exceptions import AppBaseException
 from app.core.responses import response_template
 from app.features.containers.schemas import ContainerConfig
 
+
+
 def seed_container_configs():
     """Scans the app/configs directory and seeds any .json templates into SQLite if they don't exist."""
     # Assuming your main.py is in app/, configs/ will be right alongside it
     config_dir = Path(__file__).parent / "core/configs/containers"
     
     if not config_dir.exists():
-        print(f"Configs directory not found at {config_dir}, skipping seed.")
+        logger.error(f"Configs directory not found at {config_dir}, skipping seed.")
         return
 
     with Session(engine) as session:
@@ -41,7 +50,7 @@ def seed_container_configs():
                 existing = session.exec(statement).first()
                 
                 if not existing:
-                    print(f"Seeding container config: {name} (from {file_path.name})")
+                    logger.info(f"Seeding container config: {name} (from {file_path.name})")
                     new_config = ContainerConfig(
                         name=name,
                         description=template.get("description"),
@@ -50,7 +59,7 @@ def seed_container_configs():
                     session.add(new_config)
                     
             except Exception as e:
-                print(f"Failed to load seed config {file_path.name}: {e}")
+                logger.exception(f"Failed to load seed config {file_path.name}: {e}")
                 
         session.commit()
 
@@ -61,7 +70,7 @@ async def check_connections_v2():
             with Session(engine) as session:
                 await MachineManager.check_agent_connections(session)
         except Exception as e:
-            print(f"Error in check_connections background loop: {e}")
+            logger.error(f"Error in check_connections background loop: {e}")
 
         await asyncio.sleep(15)
 
@@ -90,7 +99,7 @@ async def lifespan(app: FastAPI):
     
     yield
     bg_task.cancel()
-    print("Shutting down control plane...")
+    logger.info("Shutting down control plane...")
     
 
 

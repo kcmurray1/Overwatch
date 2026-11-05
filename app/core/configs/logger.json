@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "console_fmt": {
+      "format": "[%(levelname)s] [%(name)s] %(message)s"
+    },
+    "file_fmt": {
+      "format": "%(asctime)s [%(name)s] - %(levelname)s - %(relpath)s:%(lineno)d - %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    }
+  },
+  "filters": {
+    "project_path_filter": {
+      "()": "app.logger.PathFilter"
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "INFO",
+      "formatter": "console_fmt",
+      "stream": "ext://sys.stdout"
+    },
+    "file": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "level": "DEBUG",
+      "formatter": "file_fmt",
+      "filename": "./logs/overwatch.log",
+      "maxBytes": 5242880,
+      "backupCount": 3,
+      "encoding": "utf-8",
+      "filters": ["project_path_filter"]
+    }
+  },
+  "loggers": {
+    "httpx": {
+      "level": "WARNING",
+      "handlers": [],
+      "propagate": false
+    },
+    "httpcore": {
+      "level": "WARNING",
+      "handlers": [],
+      "propagate": false
+    }
+  },
+  "root": {
+    "level": "DEBUG",
+    "handlers": ["console", "file"]
+  }
+}

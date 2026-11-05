@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session, selectinload
 from pydantic import BaseModel
 from sqlmodel import select
 from typing import Optional
-from app.dependencies import get_session
+from app.core.configs.db import get_session
 from app.models import Machine, MachineBase
 from .manager import MachineManager
-from app.config import Settings, get_settings
+from app.core.configs.settings import Settings, get_settings
 from app.core.responses import response_template
 from app.features.containers.manager import ContainerUtils
 router = APIRouter(

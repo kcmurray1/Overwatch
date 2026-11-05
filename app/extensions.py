@@ -1,3 +1,0 @@
-from app.features.docker_orchestrator.manager import DockerOrchestrationManager
-
-docker_orchestrator = DockerOrchestrationManager()

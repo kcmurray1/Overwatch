@@ -1,6 +1,5 @@
 from sqlmodel import Session, create_engine
 from sqlalchemy import event
-import os
 
 DATABASE_URL="sqlite:///./instance/machines.db"
 

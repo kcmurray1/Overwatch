@@ -4,7 +4,7 @@ from sqlmodel import Session, select, delete
 from typing import Dict, Any
 from pydantic import BaseModel
 from app.core.responses import response_template
-from app.dependencies import get_session
+from app.core.configs.db import get_session
 from app.features.agent.manager import AgentManager
 from app.models import Machine
 

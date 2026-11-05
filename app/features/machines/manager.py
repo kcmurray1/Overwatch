@@ -5,6 +5,11 @@ import asyncio
 import queue
 import threading
 from fastapi import BackgroundTasks
+import requests
+import logging
+
+logger = logging.getLogger(__name__)
+
 from app.models import Machine
 from app.features.agent.manager import AgentManager
 from app.core.os_platforms.windows import WindowsOS
@@ -14,8 +19,11 @@ from app.core.exceptions import (MachineConnectionError, UnsupportedMachineOS, M
                                  MachineDoesNotExist, MissingProjectFields, ProjectDoesNotExist)
 from app.features.vscode.command import launch_vscode
 from app.features.tailscale_manager.tailscale_manager import TailscaleManager
-from app.config import Settings, get_settings
-import requests
+from app.core.configs.settings import Settings, get_settings
+
+
+
+
 OS_HANDLERS = {
         "windows" : WindowsOS(),
         "linux" : LinuxOS()
@@ -56,7 +64,7 @@ class MachineManager:
         async with httpx.AsyncClient(timeout=3.0) as client:
             async def ping(machine: Machine):
                 host = machine.tailscale_ip or machine.address
-                print('checking', host)
+                logging.info(f'checking agent connection: {host}')
                 if not host:
                     machine.is_online = False
                     return

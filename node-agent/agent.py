@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def watch_docker_events():
     global CONTROL_PLANE_HOST
     try:
-        client = docker.from_env()  # Automatically picks up unix://var/run/docker.sock
+        client = docker.from_env() 
         logger.info("Started watching local Docker events...")
         
        
@@ -30,15 +30,18 @@ def watch_docker_events():
                 "action": event.get("Action", ""),
                 "container_id": container_id,
                 "host_address": socket.gethostname(),
-                "attrs": None
+                "attrs": event.get("Attributes",{})
             }
             
-            try:
-                payload["attrs"] = client.containers.get(container_id).attrs
-                logger.info('docker event triggered')
-            except Exception as e:
-                logger.error("container get error", str(e))
-            
+            if event.get("Action", "") in ["die", "destroy", "stop", "kill"]:
+                logger.info(f"Container lifecycle event '{event.get("Action", "")}' for {container_id}")
+            else:
+                try:
+                    payload["attrs"] = client.containers.get(container_id).attrs
+                    logger.info('docker event triggered')
+                except Exception as e:
+                    logger.error("container get error", str(e))
+                
             # send request to control plane host
             if CONTROL_PLANE_HOST:
                 try:

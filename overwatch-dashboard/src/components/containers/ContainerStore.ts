@@ -44,6 +44,7 @@ export class ContainerStore {
 
 
     setContainers(containers: IDockerContainer[]) {
+        this.containerMap.clear();
         containers.forEach(container => {
             const model = new ObservableContainerModel(container);
             this.containerMap.set(model.id, model);

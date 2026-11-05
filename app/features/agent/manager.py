@@ -1,6 +1,10 @@
 import paramiko
 import os
-from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
+
+from app.core.configs.settings import get_settings
 from app.models import Machine
 
 IGNORED_PATTERNS = {
@@ -45,7 +49,7 @@ class AgentManager:
             if os.path.isdir(local_item):
                 AgentManager._sftp_upload_dir(sftp, local_item, remote_item)
             else:
-                print(f"Uploading: {item} -> {remote_item}")
+                logger.debug(f"Uploading: {item} -> {remote_item}")
                 sftp.put(local_item, remote_item)
                 
     @staticmethod
@@ -68,7 +72,6 @@ class AgentManager:
         Install local hardware reporting agent to target machine.
         NOTE: Linux Machines require manual run of setup.sh to approve installation of dependencies.
         """
-        load_dotenv()
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -76,7 +79,7 @@ class AgentManager:
             hostname=machine_model.address,
             port=machine_model.port,
             username=machine_model.user,
-            key_filename=os.environ.get("KEY_PATH"),
+            key_filename=get_settings().key_path,
         )
 
         install_dir, setup_script = AgentManager.get_installation_info(
@@ -87,9 +90,9 @@ class AgentManager:
         local_dir = os.path.join(os.getcwd(), "node-agent")
 
         with client.open_sftp() as sftp:
-            print(f"Deploying node-agent to remote path: {install_dir}")
+            # print(f"Deploying node-agent to remote path: {install_dir}")
             AgentManager._sftp_upload_dir(sftp, local_dir, install_dir)
-            print("SFTP upload complete!")
+            logger.info("SFTP upload complete!")
 
             if machine_model.os_type == "windows":
                 # Start agent or execute setup script on Windows
@@ -97,14 +100,13 @@ class AgentManager:
                 cmd = f'powershell -ExecutionPolicy Bypass -File "{script_path}"'
                 
                 stdin, stdout, stderr = client.exec_command(cmd)
-                print("Powershell Output:", stdout.read().decode())
-                print("Powershell Errors:", stderr.read().decode())
+                logger.info("Powershell Output:", stdout.read().decode())
+                logger.error("Powershell Errors:", stderr.read().decode())
 
         client.close()
         
     @staticmethod
     def update(machine_model: Machine):
-        load_dotenv()
         
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -112,7 +114,7 @@ class AgentManager:
             hostname=machine_model.address,
             port=machine_model.port,
             username=machine_model.user,
-            key_filename=os.environ.get("KEY_PATH"),
+            key_filename=get_settings().key_path,
         )
 
         install_dir, setup_script = AgentManager.get_installation_info(
@@ -123,14 +125,13 @@ class AgentManager:
         
         # stop the agent        
         if machine_model.os_type == "linux":
-            print(f"Stopping agent on {machine_model.address}...")
+            logger.info(f"Stopping agent on {machine_model.address}...")
             client.exec_command("sudo systemctl stop overwatch")
 
         # push updated files to aget
         with client.open_sftp() as sftp:
-            print(f"Deploying node-agent to remote path: {install_dir}")
             AgentManager._sftp_upload_dir(sftp, local_dir, install_dir)
-            print("SFTP upload complete!")
+            logger.info("SFTP upload complete!")
 
             if machine_model.os_type == "windows":
                 # Start agent or execute setup script on Windows
@@ -138,14 +139,14 @@ class AgentManager:
                 cmd = f'powershell -ExecutionPolicy Bypass -File "{script_path}"'
                 
                 stdin, stdout, stderr = client.exec_command(cmd)
-                print("Powershell Output:", stdout.read().decode())
-                print("Powershell Errors:", stderr.read().decode())
+                logger.info(f"Powershell Output: {stdout.read().decode()}")
+                logger.error(f"Powershell Errors: {stderr.read().decode()}")
         
         # restart the service
         if machine_model.os_type == "linux":
-            print(f"Restarting agent service on {machine_model.address}...")
+            logger.info(f"Restarting agent service on {machine_model.address}...")
             stdin, stdout, stderr = client.exec_command("sudo systemctl start overwatch")
-            print("Restart errors (if any):", stderr.read().decode())
+            logger.error(f"Restart errors (if any): {stderr.read().decode()}")
         client.close()
         
     

@@ -3,6 +3,10 @@ from sqlalchemy.orm import selectinload
 import httpx
 import docker
 from fastapi import BackgroundTasks
+import logging
+
+logger = logging.getLogger(__name__)
+
 from app.models import Container
 from .utils import ContainerUtils
 from .schemas import ContainerConfig

@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 from sqlmodel import SQLModel
-from app.dependencies import engine
+from app.core.configs.db import engine
 from app.models import Container, Machine
 from app.features.containers.schemas import ContainerConfig
 

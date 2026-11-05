@@ -1,8 +1,7 @@
 import requests
-import os
 from app.core.os_platforms.windows import WindowsOS
 from app.core.os_platforms.linux import LinuxOS
-
+from app.core.configs.settings import get_settings
 
 
 class TailscaleManager:
@@ -15,8 +14,8 @@ class TailscaleManager:
 
     def _get_access_token(self, ephemeral=True, reusable=False):
         res = requests.post(self.TOKEN_URL, data={
-        "client_id": os.environ.get("TS_CL"),
-        "client_secret": os.environ.get("TS_STUFF")
+        "client_id": get_settings().ts_cl,
+        "client_secret": get_settings().ts_stuff
         })
 
         # https://tailscale.com/api#tag/keys/post/tailnet/{tailnet}/keys
@@ -54,7 +53,7 @@ class TailscaleManager:
             combined_cmd = f"""sudo -S curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale set --operator={hostname} && tailscale up --authkey={access_token} --hostname={hostname} --accept-dns=false"""
             
             stdin, stdout, stderr = ssh_conn.client.exec_command(combined_cmd, get_pty=True)
-            stdin.write(os.environ.get("CRED") + '\n')
+            stdin.write(get_settings().cred + '\n')
             stdin.flush()
             
             print('err', stderr.read().decode())

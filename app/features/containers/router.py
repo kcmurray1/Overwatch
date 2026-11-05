@@ -2,10 +2,9 @@ from fastapi import APIRouter, Depends, BackgroundTasks, Request
 from sqlmodel import Session, select, delete
 from typing import Dict, Any
 from pydantic import BaseModel
-from app.dependencies import get_session
+from app.core.configs.db import get_session
 from app.models import Container, Machine
 from app.features.machines.manager import MachineManager
-from app.extensions import docker_orchestrator
 from app.core.responses import response_template
 from .manager import ContainerManager
 from .schemas import ContainerConfig
@@ -22,7 +21,7 @@ def read_containers(session: Session = Depends(get_session)):
 
 @router.post("")
 def create_container(project_data: Dict[str, Any], session:Session = Depends(get_session)):
-    new_container = docker_orchestrator.add_container(session,**project_data)
+    # new_container = docker_orchestrator.add_container(session,**project_data)
 
     return response_template(200, "ok", new_container)
 
@@ -97,6 +96,7 @@ async def update_container(data: DockerEvent, request: Request, session: Session
     action = data.action
     container_id = data.container_id
     # print(data.attrs)
+    print(f'performing action', data.action)
     container = session.exec(select(Container).where(Container.docker_id == container_id)).one_or_none()
     if not container and action != DockerActionType.DESTROY and action != "kill":
         machine_obj = None
@@ -106,7 +106,7 @@ async def update_container(data: DockerEvent, request: Request, session: Session
         
         if not machine_obj:
             print("no machine object")
-            return
+            return {"status": "ignored", "reason": "machine not found"}
         
         container = Container(
                 docker_id=container_id,
@@ -117,9 +117,10 @@ async def update_container(data: DockerEvent, request: Request, session: Session
                 machine_id=machine_obj.id)
                     
         session.add(container)
-        
     
-    if action == DockerActionType.DESTROY:
+
+    
+    if action == DockerActionType.DESTROY and container:
         print("removing container")
         session.delete(container)
     elif action == DockerActionType.START:

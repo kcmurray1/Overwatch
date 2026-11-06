@@ -13,7 +13,7 @@
       "SE_EVENT_BUS_HOST": "{{hub_address}}",
       "SE_NODE_HOST": "{{address}}",
       "SE_NODE_PORT": "5555",
-      "SE_NODE_MAX_SESSIONS": "4",
+      "SE_NODE_MAX_SESSIONS": 4,
       "SE_NODE_OVERRIDE_MAX_SESSIONS": "true"
     }
   }

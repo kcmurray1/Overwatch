@@ -1,4 +1,8 @@
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
+
 from app.core.os_platforms.windows import WindowsOS
 from app.core.os_platforms.linux import LinuxOS
 from app.core.configs.settings import get_settings
@@ -56,12 +60,12 @@ class TailscaleManager:
             stdin.write(get_settings().cred + '\n')
             stdin.flush()
             
-            print('err', stderr.read().decode())
+            logger.error(f'Tailnet os error: {stderr.read().decode()}')
         
             
         
             if stdout.channel.recv_exit_status() != 0:
-                print("issue during tailscale installation...")
+                logger.error("issue during tailscale installation...")
                 return
             # returns tailscale ipv4 and unique ipv6(unused)
             stdin, stdout, stderr = ssh_conn.client.exec_command("tailscale ip")
@@ -69,7 +73,7 @@ class TailscaleManager:
 
             return ts_ipv4
         else:
-            print('unsupported type ', type(os_handler))
+            logger.warning('unsupported type ', type(os_handler))
 
         # tailnet_ip = os_handler.install_tailscale(ssh_conn, hostname, self._get_access_token())
 

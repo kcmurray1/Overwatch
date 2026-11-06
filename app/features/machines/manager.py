@@ -61,10 +61,10 @@ class MachineManager:
     async def check_agent_connections(session: Session):
         machines = session.exec(select(Machine)).all()
 
-        async with httpx.AsyncClient(timeout=3.0) as client:
+        async with httpx.AsyncClient(timeout=2.0) as client:
             async def ping(machine: Machine):
                 host = machine.tailscale_ip or machine.address
-                logging.info(f'checking agent connection: {host}')
+                logging.debug(f'checking agent connection: {host}')
                 if not host:
                     machine.is_online = False
                     return
@@ -83,7 +83,7 @@ class MachineManager:
                             # maybe restart the containers with the updated tailscale address or hand out permanent keys instead of ephemeral
                             machine.tailscale_ip = ts.add_to_tailnet(ssh_conn=sshConn, os_handler=OS_HANDLERS.get(machine.os_type), hostname=machine.user)
                     except Exception as ssh_err:
-                        print("SSH recover failed", ssh_err)
+                        logger.warning(f"{machine.address} SSH recover failed: {type(ssh_err).__name__} - {ssh_err}")
                         machine.is_online = False
                 
                 session.add(machine)
@@ -100,7 +100,6 @@ class MachineManager:
         """
         Check for OS using the helper's execute method.
         """
-        print("detecting os...")
         if "Microsoft Windows" in ssh_manager.execute("ver"):
             return "windows"
             
@@ -117,13 +116,13 @@ class MachineManager:
             raise MachineAlreadyExists
         try:
             with SSHClientContextManager(address=address, port=port, username=username, keypath=keypath) as sshConn:
+                logger.info("Adding machine: detecting OS...")
                 os_type = MachineManager.detect_os(sshConn)
     
                 if not os_type:
                     raise UnsupportedMachineOS
-                         
                 os_handler = OS_HANDLERS.get(os_type)
-                print("handling", os_handler)
+                logger.info(f"Adding machine: extracting system info for {os_handler} system")
                 sys_info = os_handler.get_system_info(sshConn.execute)
                 sys_info['os_type'] = os_type
                 sys_info['user'] = username
@@ -150,7 +149,7 @@ class MachineManager:
                     # docker_orchestrator.get_info(new_machine, session)
                     ContainerManager.detect_existing_containers(machine_obj=new_machine, session=session)
                 except Exception as e:
-                    print("could not get docker containers", e)
+                    logger.warning(f"could not get docker containers {str(e)}")
 
                 return sys_info
         except TimeoutError:
@@ -165,7 +164,6 @@ class MachineManager:
             client.connect(hostname=ip, port=port, username=user, timeout=3) 
             return True
         except Exception as e:
-            # print(f'{user}@{ip}', e)
             return False
         finally:
             client.close()
@@ -195,7 +193,7 @@ class MachineManager:
                     if MachineManager.check_ssh_connection(ip, user=machine["user"], port=machine["port"]):
                         with target_lock:
                             found_machines.add(machine["user"])
-                            print(f"{machine["user"]}@{ip}:{machine["port"]}")
+                            # logger.info(f"{machine["user"]}@{ip}:{machine["port"]}")
                             db_machine = session.exec(select(Machine).where(Machine.id == machine["id"])).one_or_none()
                             if db_machine and (db_machine.address != ip):
                                 
@@ -212,8 +210,7 @@ class MachineManager:
         
         for t in threads:
             t.join()
-        print(found_machines)
-        print("scan complete!")
+        logger.info(f"scan complete: {found_machines}")
         session.commit()
     
     @staticmethod
@@ -333,10 +330,15 @@ class MachineManager:
         async def fetch_agent_stats(client: httpx.AsyncClient, machine: Machine) -> dict:
             if not machine.tailscale_ip:
                 raise ValueError("No valid Tailscale address configured")
+            try:
                 
-            response = await client.get(f"http://{machine.tailscale_ip}:8001/system/usage", timeout=3.0)
-            response.raise_for_status()
-            return response.json()
+                response = await client.get(f"http://{machine.tailscale_ip}:8001/system/usage", timeout=2.0)
+                return response.json()
+            except Exception as e:
+                logger.warning(f"{machine.address} unable to fetch agent stats: {type(e).__name__} - {str(e)}")
+                return {}
+          
+        
         def parse_gb(val_str: str) -> float:
                 if not val_str:
                     return 0.0
@@ -347,11 +349,12 @@ class MachineManager:
                 machine = session.get(Machine, id)
                 try:
                     stats = await fetch_agent_stats(client, machine)
+                    if not stats:
+                        return {"id": machine.id, "name": machine.name, "online": False}
                     return {"id": machine.id, "name": machine.user, "online": True, "stats": stats}
                 except Exception as e:
                     return {"id": machine.id, "name": machine.name, "online": False, "error": str(e)}
     
-            # Case 2: Aggregate / All machines requested
             machines = session.exec(select(Machine)).all()
             if not machines:
                 return {"individual": [], "aggregate": {}}

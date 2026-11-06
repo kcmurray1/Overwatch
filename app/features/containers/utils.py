@@ -14,7 +14,6 @@ class ContainerUtils:
             for port, hosts in ports_binding.get("Ports").items():
                 if not hosts:
                     continue
-                # print(port, hosts)
                 for host in hosts:
                     if host.get('HostIp') == '0.0.0.0':
                         return host.get('HostPort')

@@ -28,6 +28,12 @@ const ContainerForm = observer(({config, update}: {config: ContainerConfig, upda
                     draft.spec.name = value;
                 })
             }}/>
+            {config.spec && config.spec.shm_size &&
+             <TextField label="shm_size" value={config.spec.shm_size} onChange={(value) => {
+                update((draft) => {
+                    draft.spec.shm_size = value;
+                })
+            }}/>}
             
 
             {config.spec && (
@@ -54,6 +60,8 @@ const ContainerForm = observer(({config, update}: {config: ContainerConfig, upda
                             }
                         })}
                         </div>
+                        
+
                     </div>
                 )}
              {config.spec && ( 
@@ -88,8 +96,7 @@ const ContainerForm = observer(({config, update}: {config: ContainerConfig, upda
                 })}
                 </div>
             </div>
-            )
-            }
+            )}
             {config.spec.volumes && ( 
                 <div>
                 <h3 className="font-bold">Volumes</h3>

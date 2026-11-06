@@ -69,6 +69,8 @@ async def check_connections_v2():
             # Use engine context directly for background tasks
             with Session(engine) as session:
                 await MachineManager.check_agent_connections(session)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             logger.error(f"Error in check_connections background loop: {e}")
 

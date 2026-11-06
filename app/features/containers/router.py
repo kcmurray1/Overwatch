@@ -2,6 +2,11 @@ from fastapi import APIRouter, Depends, BackgroundTasks, Request
 from sqlmodel import Session, select, delete
 from typing import Dict, Any
 from pydantic import BaseModel
+
+import logging
+logger = logging.getLogger(__name__)
+
+
 from app.core.configs.db import get_session
 from app.models import Container, Machine
 from app.features.machines.manager import MachineManager
@@ -21,7 +26,7 @@ def read_containers(session: Session = Depends(get_session)):
 
 @router.post("")
 def create_container(project_data: Dict[str, Any], session:Session = Depends(get_session)):
-    # new_container = docker_orchestrator.add_container(session,**project_data)
+    new_container = ContainerManager.create(session, **project_data)
 
     return response_template(200, "ok", new_container)
 
@@ -54,7 +59,7 @@ async def start_container(
     id, 
     background_tasks: BackgroundTasks,
     session: Session = Depends(get_session)):
-    print('starting container..', id)
+    logger.info(f'starting container.. {id}')
     ContainerManager.start(id, session, background_tasks)
     return response_template(200, "ok")
 
@@ -62,9 +67,9 @@ async def start_container(
 async def stop_container( id, 
     background_tasks: BackgroundTasks,
     session: Session = Depends(get_session)):
-    print('stopping container..', id)
+    logger.info(f'stopping container id:{id}')
     ContainerManager.stop(id, session, background_tasks)
-    print("stopping container", id)
+    logger.info(f'stopped container id:{id}')
     
     return response_template(200, "ok")
 
@@ -95,19 +100,18 @@ class DockerEvent(BaseModel):
 async def update_container(data: DockerEvent, request: Request, session: Session = Depends(get_session)):
     action = data.action
     container_id = data.container_id
-    # print(data.attrs)
-    print(f'performing action', data.action)
+
+    logger.info(f'received docker action event: {data.action}')
     container = session.exec(select(Container).where(Container.docker_id == container_id)).one_or_none()
     if not container and action != DockerActionType.DESTROY and action != "kill":
         machine_obj = None
         local_address = request.client.host
-        print(data.host_address, local_address)
         machine_obj = session.exec(select(Machine).where(Machine.tailscale_ip == local_address)).one_or_none()
         
         if not machine_obj:
-            print("no machine object")
             return {"status": "ignored", "reason": "machine not found"}
-        
+        if not data.attrs.get("State"):
+            return {"status": "ignored", "reason": "state not found"}
         container = Container(
                 docker_id=container_id,
                 image=data.attrs.get("Image"),
@@ -121,21 +125,18 @@ async def update_container(data: DockerEvent, request: Request, session: Session
 
     
     if action == DockerActionType.DESTROY and container:
-        print("removing container")
+        logger.info("docker action event: removing container")
         session.delete(container)
     elif action == DockerActionType.START:
-        print("starting container")
+        logger.info("docker action event: starting container")
         container.state = "running"
         
     elif action == DockerActionType.STOP or action == DockerActionType.DIE:
-        print("stopping container")
+        logger.info("docker action event: stopping container")
         container.state = "offline"
     else:
-        print("unsupported docker action type", action)
-    
+        logger.info(f'docker action event: unsupported docker action type {action}')
     session.commit()
-    
-
     return {"status": "ok"}
 
 
@@ -155,6 +156,4 @@ def deploy_container(
     machine_ids = data.pop("machine_ids")
     MachineManager.deploy_container(machine_ids, data, session, background_tasks)
        
-    print(data)
-    
     return response_template(201, "created")

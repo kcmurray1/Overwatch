@@ -69,9 +69,10 @@ class UsageMonitor:
             drives = []
             for disk in psutil.disk_partitions(all=False):
                 try:
+                    
                     raw_usage = psutil.disk_usage(disk.mountpoint)._asdict()
                     
-                    # 1. Get formatted display values
+                    # Get formatted display values
                     disk_usage = cls.format_stat(
                         raw_usage,
                         ByteConverter.decimal.to_terabyte,
@@ -79,7 +80,7 @@ class UsageMonitor:
                     disk_usage["drive"] = disk.device
                     disk_usage["mountpoint"] = disk.mountpoint
                     
-                    # 2. Add raw numeric values in GB for zero-cost control plane aggregation
+                    # Add raw numeric values in GB for zero-cost control plane aggregation
                     disk_usage["total_gb"] = round(ByteConverter.decimal.to_gigabyte(raw_usage.get("total", 0)), 2)
                     disk_usage["used_gb"] = round(ByteConverter.decimal.to_gigabyte(raw_usage.get("used", 0)), 2)
                     disk_usage["free_gb"] = round(ByteConverter.decimal.to_gigabyte(raw_usage.get("free", 0)), 2)

@@ -15,13 +15,13 @@ class ContainerManager:
     async def send_agent_request(address, method, endpoint, data={}):
         try:
             url = f"http://{address}:8001/{endpoint}"
-            print('sending reqquest to', url)
+            logger.info(f'sending agent request to {url}')
             async with httpx.AsyncClient() as client:
                 response = await client.request(method=method, url=url, json=data)
-                print("agent respsone", response)
+                logger.info(f'agent request response {response}')
                 response.raise_for_status()
         except Exception as e:
-            print(f'agent request error: {str(e)}')
+            logger.info(f'agent request error {str(e)}')
             return None
         
     @staticmethod   
@@ -30,7 +30,7 @@ class ContainerManager:
             :NOTE: This will not function if the target device and client device do not have
             SSH authentication setup
         """
-        print(f"connecting to ssh://{machine_obj.user}@{machine_obj.address}:{machine_obj.port}")
+        # print(f"connecting to ssh://{machine_obj.user}@{machine_obj.address}:{machine_obj.port}")
         docker_client = docker.DockerClient(base_url=f"ssh://{machine_obj.user}@{machine_obj.address}:{machine_obj.port}", use_ssh_client=True, version='auto', 
         timeout=60)
         containers_to_add = []
@@ -49,15 +49,18 @@ class ContainerManager:
         session.add_all(containers_to_add)
         session.commit()
 
-    def create(machine_objects, config, background_tasks: BackgroundTasks):
-        for machine_object in machine_objects:
-            background_tasks.add_task(
-                ContainerManager.send_agent_request,
-                address=machine_object.get("address"),
-                method="POST",
-                endpoint=f"containers/create",
-                data=config
-            )
+    def create(data: dict, session: Session):
+        new_container = Container(
+            docker_id=data.get("Id"),
+            image=data["Config"]["Image"],
+            name=data.get("Name","").lstrip("/"),
+            config=data.get("Config"),
+            state=data["State"]["Status"],
+            machine_id=data.get("machind_id"),
+        )
+        session.add(new_container)
+        session.commit()
+        return new_container.model_dump()
             
         
         

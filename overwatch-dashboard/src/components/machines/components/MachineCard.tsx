@@ -72,13 +72,14 @@ const MachineStatsCard = observer(({machine} : {machine: IMachine}) => {
         }
         return `${gb.toFixed(1)}GB`;
     };
+    
 
     return (<>
-       {stats && <div className="grid grid-cols-2 p-2">
+       {stats && stats.stats && <div onClick={(e) => e.stopPropagation()} className="grid grid-cols-2 p-2">
         <MachineTelemetry 
         avg_cpu_percent={stats.stats.cpu}  
-        total_ram={stats.stats.memory.total_gb}
-        used_ram={stats.stats.memory.used_gb}
+        total_ram={stats.stats.memory?.total_gb}
+        used_ram={stats.stats.memory?.used_gb}
         />
         <div>
             <div className="grid grid-cols-3 items-center gap-3">
@@ -87,7 +88,7 @@ const MachineStatsCard = observer(({machine} : {machine: IMachine}) => {
                 <span>Capacity</span>
 
             </div>
-            {stats.stats.drives.map((drive, index) => {
+            {stats.stats.drives?.map((drive, index) => {
                 return <div className="grid grid-cols-3 items-center gap-3" key={index}>
                     <span className="font-mono font-medium text-blue-400 text-sm">{drive.mountpoint}</span>
                     <span className="font-mono truncate max-w-[150px]" title={drive.drive}>
